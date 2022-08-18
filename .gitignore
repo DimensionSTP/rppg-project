@@ -1,0 +1,9 @@
+*.txt
+*.mp4
+*.npy
+*.csv
+*.xml
+*__pycache__
+logs/
+checkpoints/
+tmp.py

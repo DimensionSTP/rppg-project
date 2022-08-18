@@ -1,0 +1,9 @@
+_target_: src.architecture_modules.architecture_module.RppgPlModule
+
+model:
+  _target_: src.architecture_modules.models.rhythmnet.RhythmNet
+
+lr: 0.0001
+t_max: 50
+eta_min: 0.000025
+interval: "step"

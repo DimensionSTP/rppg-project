@@ -1,0 +1,21 @@
+# @package _global_
+defaults:
+  - dataset_module: dataset_module
+  - architecture_module: architecture_module
+  - logger: wandb
+  - hydra: hydra
+  - callbacks: callbacks
+  - trainer: trainer
+
+batch_size: 16
+
+model_name: CustomizedRhythmNet-18-gru2-bi
+
+seed: 2022
+
+run_name: ${model_name}
+work_dir: ${hydra:runtime.cwd}
+
+tags: ${model_name}
+
+epoch: 100
