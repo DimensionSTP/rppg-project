@@ -7,10 +7,6 @@ from pytorch_lightning.utilities.distributed import rank_zero_info
 
 from src.utils.setup import SetUp
 
-# import os
-# os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
-# os.environ["NCCL_SOCKET_IFNAME"] = "eth0"
-
 def train(config: DictConfig):
     
     if "seed" in config:

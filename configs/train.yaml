@@ -7,9 +7,14 @@ defaults:
   - callbacks: callbacks
   - trainer: trainer
 
+resnet_size: 18
+rnn_type: "gru"
+rnn_num_layers: 10
+direction: "bi"
+
 batch_size: 16
 
-model_name: CustomizedRhythmNet-18-gru2-bi
+model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
 
 seed: 2022
 

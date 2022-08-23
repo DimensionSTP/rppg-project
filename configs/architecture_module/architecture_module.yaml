@@ -1,7 +1,11 @@
 _target_: src.architecture_modules.architecture_module.RppgPlModule
 
 model:
-  _target_: src.architecture_modules.models.rhythmnet.RhythmNet
+  _target_: src.architecture_modules.models.customized_rhythmnet.CustomizedRhythmNet
+  resnet_size: ${resnet_size}
+  rnn_type: ${rnn_type}
+  rnn_num_layers: ${rnn_num_layers}
+  direction: ${direction}
 
 lr: 0.0001
 t_max: 50

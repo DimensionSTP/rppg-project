@@ -1,17 +1,10 @@
-import cv2
-import os
 import glob
-import numpy as np
+
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-# used for accessing url to download files
-import urllib.request as urlreq
+import cv2
+import numpy as np
+import mediapipe as mp
 from sklearn.preprocessing import MinMaxScaler
-
-# download requisite certificates
-import ssl;
-
-ssl._create_default_https_context = ssl._create_stdlib_context
 
 # Chunks the ROI into blocks of size 5x5
 def chunkify(img, block_width=5, block_height=5):
@@ -32,20 +25,6 @@ def chunkify(img, block_width=5, block_height=5):
             chunks.append(img[start_x:end_x, start_y:end_y])
             
     return chunks
-
-# Downloads xml file for face detection cascade
-def get_haarcascade():
-    haarcascade_url = "https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_alt2.xml"
-    haarcascade_filename = haarcascade_url.split('/')[-1]
-    # chech if file is in working directory
-    if haarcascade_filename in os.listdir(os.curdir):
-        print("xml file already downloaded")
-    else:
-        # download file from url and save locally as haarcascade_frontalface_alt2.xml, < 1MB
-        urlreq.urlretrieve(haarcascade_url, haarcascade_filename)
-        print("xml file downloaded")
-        
-    return cv2.CascadeClassifier(haarcascade_filename)
 
 # Function to read the the video data as an array of frames and additionally return metadata like FPS, Dims etc.
 def get_frames_and_video_meta_data(video_path, meta_data_only=False):
@@ -78,17 +57,17 @@ def get_frames_and_video_meta_data(video_path, meta_data_only=False):
                 break
         
     cap.release()
-    return frames, frame_rate, sliding_window_stride
+    return frames, frame_dims, frame_rate, sliding_window_stride
 
 # Optimized function for converting videos to Spatio-temporal maps
 def preprocess_video_to_st_maps(video_path):
-    frames, frame_rate, sliding_window_stride = get_frames_and_video_meta_data(video_path)
+    frames, frame_dims, frame_rate, sliding_window_stride = get_frames_and_video_meta_data(video_path)
     
-    clip_size = int(frame_rate * 10)
     num_frames = frames.shape[0]
+    x_size, y_size = frame_dims
+    clip_size = int(frame_rate * 10)
     num_maps = int((num_frames - clip_size)/sliding_window_stride + 1)
     if num_maps < 0:
-        # print(num_maps)
         print(video_path)
         return None
     
@@ -101,20 +80,34 @@ def preprocess_video_to_st_maps(video_path):
     
     # Init scaler and detector
     scaler = MinMaxScaler()
-    detector = get_haarcascade()
+    detector = mp.solutions.face_detection.FaceDetection(
+    min_detection_confidence=0.7, 
+    model_selection=0
+    )
     
     # First we process all the frames and then work with sliding window to save repeated processing for the same frame index
-    for idx, frame in tqdm(enumerate(frames), desc="detect faces"):
+    for idx, frame in enumerate(tqdm(frames, desc="detect faces")):
         '''
            Preprocess the Image
            Step 1: Use cv2 face detector based on Haar cascades
            Step 2: Crop the frame based on the face co-ordinates (we need to do 160%)
            Step 3: Downsample the face cropped frame to output_shape = 36x36
        '''
-        faces = detector.detectMultiScale(frame, 1.3, 5)
-        if len(faces) is not 0:
-            (x, y, w, d) = faces[0]
-            frame_cropped = frame[y:(y + d), x:(x + w)]
+        frame = cv2.flip(frame, 0)
+        faces = detector.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        if isinstance(faces.detections, list):
+            coordinates = faces.detections[0].location_data.relative_bounding_box
+            xmin = coordinates.xmin
+            ymin = coordinates.ymin
+            width = coordinates.width
+            height = coordinates.height
+            
+            x = int(xmin * x_size)
+            y = int(ymin * y_size)
+            w = int(width * x_size)
+            h = int(height * y_size)
+            
+            frame_cropped = frame[y:(y + h), x:(x + w)]
             
             frame_masked = frame_cropped
         else:
@@ -122,7 +115,7 @@ def preprocess_video_to_st_maps(video_path):
             frame_masked = cv2.bitwise_and(frame, frame, mask=mask)
             
         try:
-            frame_yuv = cv2.cvtColor(frame_masked, cv2.COLOR_BGR2YUV)
+            frame_yuv = cv2.cvtColor(frame_masked, cv2.COLOR_RGB2YUV)
             
         except:
             print('\n--------- ERROR! -----------\nUsual cv empty error')
@@ -167,12 +160,12 @@ def preprocess_video_to_st_maps(video_path):
 
 
 if __name__ == '__main__':
-    videos = glob.glob("raw/cam/*.mp4")
+    videos = glob.glob("./preprocessing/raw/cam/*.mp4")
     for idx, video in enumerate(videos):
         print("-"*200)
-        print(f"Order {idx}, {video[8:]} processing start!")
+        print(f"Order {idx}, {video[-10:]} processing start!")
         stmap, clip_size = preprocess_video_to_st_maps(video)
-        print(f"Order {idx}, {video[8:]} processing done!")
-        np.save(f"./stmaps/{video[8:-4]}_{clip_size}.npy", stmap)
-        print(f"Order {idx}, {video[8:-4]}_{clip_size}.npy saved!")
+        print(f"Order {idx}, {video[-10:]} processing done!")
+        np.save(f"./preprocessing/mp_stmaps/{video[-10:-4]}_{clip_size}.npy", stmap)
+        print(f"Order {idx}, {video[-10:-4]}_{clip_size}.npy saved!")
         print("-"*200)
