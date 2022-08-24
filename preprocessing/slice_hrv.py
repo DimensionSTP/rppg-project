@@ -2,9 +2,9 @@ import glob
 import pandas as pd
 from tqdm import tqdm
 
-STMAPS = glob.glob("stmaps/*300.npy")
+STMAPS = glob.glob("mp_stmaps/*300.npy")
 SAVE_PATH = "preprocessed_dataset"
-HRV_PATH = "./hrv/result"
+HRV_PATH = "./preprocessing/hrv/result"
 
 for map in tqdm(STMAPS): 
     name = map[7:-8]
@@ -15,8 +15,8 @@ for map in tqdm(STMAPS):
         end = start + 10
         slice = df[start:end]
         if name[:3] == "hjh":
-            slice.to_csv(f"../{SAVE_PATH}/val/{name}_300_{i}.csv", index=False)
+            slice.to_csv(f"./{SAVE_PATH}/val/{name}_300_{i}.csv", index=False)
         elif name[:3] == "yjh":
-            slice.to_csv(f"../{SAVE_PATH}/test/{name}_300_{i}.csv", index=False)
+            slice.to_csv(f"./{SAVE_PATH}/test/{name}_300_{i}.csv", index=False)
         else:
-            slice.to_csv(f"../{SAVE_PATH}/train/{name}_300_{i}.csv", index=False)
+            slice.to_csv(f"./{SAVE_PATH}/train/{name}_300_{i}.csv", index=False)

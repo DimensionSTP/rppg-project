@@ -15,12 +15,12 @@ ssl._create_default_https_context = ssl._create_stdlib_context
 # Chunks the ROI into blocks of size 5x5
 def chunkify(img, block_width=5, block_height=5):
     shape = img.shape
-    x_len = shape[0] // block_width
-    y_len = shape[1] // block_height
+    x_len = shape[1] // block_width
+    y_len = shape[0] // block_height
     
     chunks = []
-    x_indices = [i for i in range(0, shape[0] + 1, x_len)]
-    y_indices = [i for i in range(0, shape[1] + 1, y_len)]
+    x_indices = [i for i in range(0, shape[1] + 1, x_len)]
+    y_indices = [i for i in range(0, shape[0] + 1, y_len)]
     
     for i in range(len(x_indices) - 1):
         start_x = x_indices[i]
@@ -65,7 +65,6 @@ def get_frames_and_video_meta_data(video_path, meta_data_only=False):
     with tqdm(total=num_frames, desc="get frames") as pbar:
         frame_counter = 0
         while cap.isOpened():
-            # curr_frame_id = int(cap.get(1))  # current frame number
             ret, frame = cap.read()
             pbar.update(1)
             if not ret:
@@ -91,7 +90,6 @@ def preprocess_video_to_st_maps(video_path):
         return None
     
     # stacked_maps is the all the st maps for a given video (=num_maps) stacked.
-    # stacked_maps = np.zeros((num_maps, clip_size, 25, 3))
     stacked_maps = np.zeros((num_maps, 3, clip_size, 25))
     # processed_maps will contain all the data after processing each frame, but not yet converted into maps
     processed_frames = []
@@ -125,18 +123,16 @@ def preprocess_video_to_st_maps(video_path):
         except:
             print('\n--------- ERROR! -----------\nUsual cv empty error')
             print(f'Shape of img1: {frame.shape}')
-            # print(f'bbox: {bbox}')
             print(f'This is at idx: {idx}')
             exit(666)
             
         processed_frames.append(frame_yuv)
         
     # At this point we have the processed maps from all the frames in a video and now we do the sliding window part.
-    for start_frame_index in tqdm(range(0, num_frames, sliding_window_stride), desc="make STMaps"):
+    for start_frame_index in tqdm(range(0, num_frames, sliding_window_stride), desc="make STMaps", total=num_maps):
         end_frame_index = start_frame_index + clip_size
         if end_frame_index > num_frames:
             break
-        # spatio_temporal_map = np.zeros((clip_size, 25, 3))
         spatio_temporal_map = np.zeros((3, clip_size, 25))
         
         for idx, frame in enumerate(processed_frames[start_frame_index:end_frame_index]):
@@ -147,7 +143,6 @@ def preprocess_video_to_st_maps(video_path):
                 spatio_temporal_map[1, idx, block_idx] = avg_pixels[1]
                 spatio_temporal_map[2, idx, block_idx] = avg_pixels[2]
                 
-        # for block_idx in range(spatio_temporal_map.shape[1]):
         for block_idx in range(spatio_temporal_map.shape[2]):
             # Not sure about uint8
             fn_scale_0_255 = lambda x: (x * 255.0).astype(np.uint8)
@@ -168,9 +163,9 @@ if __name__ == '__main__':
     videos = glob.glob("./preprocessing/raw/cam/*.mp4")
     for idx, video in enumerate(videos):
         print("-"*200)
-        print(f"Order {idx}, {video[-10:]} processing start!")
+        print(f"Order {idx+1}, {video[-10:]} processing start!")
         stmap, clip_size = preprocess_video_to_st_maps(video)
-        print(f"Order {idx}, {video[-10:]} processing done!")
-        np.save(f"./preprocessing/haar_stmaps/{video[-10:-4]}_{clip_size}.npy", stmap)
-        print(f"Order {idx}, {video[-10:-4]}_{clip_size}.npy saved!")
+        print(f"Order {idx+1}, {video[-10:]} processing done!")
+        np.save(f"./preprocessing/mp_stmaps/{video[-10:-4]}_{clip_size}.npy", stmap)
+        print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.npy saved!")
         print("-"*200)
