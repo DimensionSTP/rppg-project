@@ -3,7 +3,8 @@
 *.npy
 *.csv
 *.xml
+*.ckpt
 *__pycache__
-logs/
-checkpoints/
+logs/runs/
+logs/wandb/
 tmp.py
