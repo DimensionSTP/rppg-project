@@ -2,12 +2,12 @@ import glob
 import pandas as pd
 from tqdm import tqdm
 
-STMAPS = glob.glob("mp_stmaps/*300.npy")
+STMAPS = glob.glob("./preprocessing/mp_stmaps/*300.npy")
 SAVE_PATH = "preprocessed_dataset"
 HRV_PATH = "./preprocessing/hrv/result"
 
 for map in tqdm(STMAPS): 
-    name = map[7:-8]
+    name = map[-14:-8]
     df = pd.read_csv(f"{HRV_PATH}/{name}_10.csv")
     chunk_num = len(df) // 10
     for i in range(chunk_num):

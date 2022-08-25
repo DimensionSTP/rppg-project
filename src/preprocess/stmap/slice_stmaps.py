@@ -2,11 +2,11 @@ import glob
 import numpy as np
 from tqdm import tqdm
 
-stmaps = glob.glob("mp_stmaps/*300.npy")
+STMAPS = glob.glob("./preprocessing/mp_stmaps/*300.npy")
 SAVE_PATH = "preprocessed_dataset"
 
-for map in tqdm(stmaps): 
-    map_name = map[7:-4]
+for map in tqdm(STMAPS): 
+    map_name = map[-14:-4]
     stmap = np.load(map)
     chunk_num = stmap.shape[0] // 10
     for i in range(chunk_num):

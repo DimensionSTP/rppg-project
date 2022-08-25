@@ -94,6 +94,7 @@ def preprocess_video_to_st_maps(video_path):
        '''
         frame = cv2.flip(frame, 0)
         faces = detector.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        # face detected
         if isinstance(faces.detections, list):
             coordinates = faces.detections[0].location_data.relative_bounding_box
             xmin = coordinates.xmin
@@ -101,6 +102,7 @@ def preprocess_video_to_st_maps(video_path):
             width = coordinates.width
             height = coordinates.height
             
+            # coordinates of detected faces are out of bounds
             if (
                 xmin >= 1.0 or
                 xmin <= 0.0 or
@@ -121,6 +123,7 @@ def preprocess_video_to_st_maps(video_path):
                 frame_cropped = frame[y:(y + h), x:(x + w)]
                 
                 frame_masked = frame_cropped
+        # face undetected
         else:
             frame_masked = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             
