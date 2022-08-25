@@ -13,7 +13,6 @@ class RppgPlModule(LightningModule):
         interval: str
         ):
         super().__init__()
-        # self.save_hyperparameters(logger=False)
         self.model = model
         self.lr = lr
         self.t_max = t_max
@@ -21,8 +20,6 @@ class RppgPlModule(LightningModule):
         self.interval = interval
     
     def forward(self, stmap):
-        # model = self.hparams.model.cuda()
-        # _, output = model(stmap)
         _, output = self.model(stmap)
         return output
     
@@ -34,15 +31,11 @@ class RppgPlModule(LightningModule):
     
     def configure_optimizers(self):
         adam_w_optimizer = optim.AdamW(
-            # self.hparams.model.parameters(), 
-            # lr=self.hparams.lr
             self.parameters(), 
             lr=self.lr
             )
         cosine_scheduler = optim.lr_scheduler.CosineAnnealingLR(
             adam_w_optimizer, 
-            # T_max=self.hparams.t_max, 
-            # eta_min=self.hparams.eta_min
             T_max = self.t_max, 
             eta_min=self.eta_min
             )
@@ -50,7 +43,6 @@ class RppgPlModule(LightningModule):
             "optimizer": adam_w_optimizer, 
             "lr_scheduler": {
                 "scheduler": cosine_scheduler, 
-                # "interval": self.hparams.interval
                 "interval": self.interval
                 }
             }
