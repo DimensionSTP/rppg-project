@@ -12,7 +12,7 @@ rnn_type: "gru"
 rnn_num_layers: 10
 direction: "bi"
 
-batch_size: 16
+batch_size: 128
 
 model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
 
