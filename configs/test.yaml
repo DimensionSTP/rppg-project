@@ -1,0 +1,28 @@
+# @package _global_
+defaults:
+  - dataset_module: dataset_module
+  - architecture_module: architecture_module
+  - logger: wandb
+  - hydra: hydra
+  - callbacks: callbacks
+  - trainer: trainer
+
+seed: 2022
+
+batch_size: 128
+
+resnet_size: 18
+rnn_type: "gru"
+rnn_num_layers: 10
+direction: "bi"
+
+ckpt_path: "./checkpoints/best.ckpt"
+
+model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
+
+run_name: ${model_name}
+work_dir: ${hydra:runtime.cwd}
+
+tags: ${model_name}
+
+epoch: 100
