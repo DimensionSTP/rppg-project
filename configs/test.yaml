@@ -11,12 +11,13 @@ seed: 2022
 
 batch_size: 128
 
-resnet_size: 18
+resnet_size: 50
 rnn_type: "gru"
 rnn_num_layers: 10
 direction: "bi"
 
-ckpt_path: "./checkpoints/best.ckpt"
+ckpt_folder: "C:/project_Han/customized-rhythmnet/checkpoints/"
+ckpt_path: "${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt"
 
 model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
 
@@ -25,4 +26,4 @@ work_dir: ${hydra:runtime.cwd}
 
 tags: ${model_name}
 
-epoch: 100
+epoch: 43

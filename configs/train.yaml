@@ -11,7 +11,7 @@ seed: 2022
 
 batch_size: 128
 
-resnet_size: 18
+resnet_size: 50
 rnn_type: "gru"
 rnn_num_layers: 10
 direction: "bi"
