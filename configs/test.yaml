@@ -17,7 +17,7 @@ rnn_num_layers: 10
 direction: "bi"
 
 ckpt_folder: "C:/project_Han/customized-rhythmnet/checkpoints/"
-ckpt_path: "${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch:02d}.ckpt"
+ckpt_path: "${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt"
 
 model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
 

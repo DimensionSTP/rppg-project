@@ -6,7 +6,7 @@ model_checkpoint:
   save_last: True
   verbose: True
   dirpath: "C:/project_Han/customized-rhythmnet/checkpoints"
-  filename: "${model_name}-bs${batch_size}-epoch{epoch:02d}"
+  filename: "${model_name}-bs${batch_size}-epoch{epoch}"
   auto_insert_metric_name: False
 
 early_stopping:
