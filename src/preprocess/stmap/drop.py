@@ -15,6 +15,6 @@ for split in tqdm(SPLIT):
     stmap_compare = [i + ".npy" for i in compare]
     label_compare = [i + ".csv" for i in compare]
     total = stmap_compare + label_compare
-    file_list =glob.glob(f"{PATH}/{split}/*")
+    file_list = glob.glob(f"{PATH}/{split}/*")
     remove_list = list(set(file_list) - set(total))
     [os.remove(f) for f in remove_list]

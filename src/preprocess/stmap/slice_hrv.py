@@ -6,7 +6,7 @@ STMAPS = glob.glob("./preprocessing/mp_stmaps/*300.npy")
 SAVE_PATH = "preprocessed_dataset"
 HRV_PATH = "./preprocessing/hrv/result"
 
-for map in tqdm(STMAPS): 
+for map in tqdm(STMAPS):
     name = map[-14:-8]
     df = pd.read_csv(f"{HRV_PATH}/{name}_10.csv")
     chunk_num = len(df) // 10

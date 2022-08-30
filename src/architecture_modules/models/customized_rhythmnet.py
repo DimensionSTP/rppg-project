@@ -2,21 +2,21 @@ import torch
 from torch import nn
 import torchvision.models as models
 
-'''
+"""
 Backbone CNN for RhythmNet model is a RestNet-18
-'''
+"""
 
 
 class CustomizedRhythmNet(nn.Module):
     def __init__(
-        self, 
-        resnet_size: int, 
-        rnn_type: str, 
-        rnn_num_layers: int, 
-        direction: str, 
-        ):
+        self,
+        resnet_size: int,
+        rnn_type: str,
+        rnn_num_layers: int,
+        direction: str,
+    ):
         super().__init__()
-        
+
         if direction == "bi":
             self.fc_rnn = nn.Linear(2000, 1)
             self.bidirectional = True
@@ -26,7 +26,7 @@ class CustomizedRhythmNet(nn.Module):
         else:
             self.fc_rnn = nn.Linear(2000, 1)
             self.bidirectional = True
-            
+
         if resnet_size is 18:
             self.resnet = models.resnet18(pretrained=False)
         elif resnet_size is 34:
@@ -39,41 +39,39 @@ class CustomizedRhythmNet(nn.Module):
             self.resnet = models.resnet152(pretrained=False)
         else:
             self.resnet = models.resnet18(pretrained=False)
-            
+
         self.fc_regression = nn.Linear(1000, 1)
-        
+
         if rnn_type == "gru":
             self.rnn = nn.GRU(
-                input_size=1000, 
-                hidden_size=1000, 
-                num_layers=rnn_num_layers, 
+                input_size=1000,
+                hidden_size=1000,
+                num_layers=rnn_num_layers,
                 batch_first=True,
-                bidirectional=self.bidirectional
-                )
+                bidirectional=self.bidirectional,
+            )
         elif rnn_type == "lstm":
             self.rnn = nn.LSTM(
-                input_size=1000, 
-                hidden_size=1000, 
-                num_layers=rnn_num_layers, 
+                input_size=1000,
+                hidden_size=1000,
+                num_layers=rnn_num_layers,
                 batch_first=True,
-                bidirectional=self.bidirectional
-                )
+                bidirectional=self.bidirectional,
+            )
         else:
             self.rnn = nn.GRU(
-                input_size=1000, 
-                hidden_size=1000, 
-                num_layers=rnn_num_layers, 
+                input_size=1000,
+                hidden_size=1000,
+                num_layers=rnn_num_layers,
                 batch_first=True,
-                bidirectional=self.bidirectional
-                )
-        
+                bidirectional=self.bidirectional,
+            )
 
-    
     def forward(self, st_maps):
         batched_output_per_clip = []
         rnn_input_per_clip = []
         hr_per_clip = []
-        
+
         for t in range(st_maps.size(1)):
             x = self.resnet(st_maps[:, t, :, :, :])
             # Save CNN features per clip for the RNN
@@ -96,9 +94,9 @@ class CustomizedRhythmNet(nn.Module):
         return regression_output, rnn_output_seq
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     model = CustomizedRhythmNet(50, "gru", 10, "bi")
-    img = torch.rand(4, 10, 3, 300, 25)*255
+    img = torch.rand(4, 10, 3, 300, 25) * 255
     reg_out, rnn_out = model(img)
     reg_out = reg_out.detach().numpy()
     rnn_out = rnn_out.detach().numpy()
