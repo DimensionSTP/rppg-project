@@ -59,7 +59,7 @@ def main(
         df.to_csv(
             f"{save_path}/{file[:-4]}_300.csv", encoding="utf-8-sig", index=False
         )  # 결과 저장
-        print(f"{file[:-4]}.csv + 분석 결과 저장 완료!")
+        print(f"{file[:-4]}_300.csv + 분석 결과 저장 완료!")
         print("-" * 200)
 
 
