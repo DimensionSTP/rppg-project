@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset_module: dataset_module
+  - dataset_module: dataset
   - architecture_module: architecture_module
   - logger: wandb
   - hydra: hydra
@@ -8,6 +8,11 @@ defaults:
   - trainer: trainer
 
 seed: 2022
+
+split:
+  train: train
+  val: val
+  test: test
 
 batch_size: 128
 

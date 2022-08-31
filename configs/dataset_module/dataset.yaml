@@ -1,0 +1,3 @@
+_target_: src.dataset_modules.datasets.dataset.STMapDataset
+data_path: C:/project_Han/customized-rhythmnet/preprocessed_dataset/
+split: train

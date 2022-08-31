@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset_module: dataset_module
+  - dataset_module: dataset
   - architecture_module: architecture_module
   - logger: wandb
   - hydra: hydra
@@ -9,6 +9,11 @@ defaults:
 
 seed: 2022
 
+split:
+  train: train
+  val: val
+  test: test
+
 batch_size: 128
 
 resnet_size: 50
@@ -16,7 +21,7 @@ rnn_type: "gru"
 rnn_num_layers: 10
 direction: "bi"
 
-ckpt_folder: "C:/project_Han/customized-rhythmnet/checkpoints/"
+ckpt_folder: C:/project_Han/customized-rhythmnet/checkpoints/
 ckpt_path: "${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt"
 
 model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
@@ -26,4 +31,4 @@ work_dir: ${hydra:runtime.cwd}
 
 tags: ${model_name}
 
-epoch: 43
+epoch: 15
