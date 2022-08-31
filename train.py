@@ -15,7 +15,9 @@ def train(config: DictConfig):
 
     setup = SetUp(config)
 
-    dataset_module = setup.get_dataset_module()
+    train_loader = setup.get_train_loader()
+    val_loader = setup.get_val_loader()
+    # dataset_module = setup.get_dataset_module()
     architecture_module = setup.get_architecture_module()
     callbacks = setup.get_callbacks()
     logger = setup.get_wandb_logger()
@@ -24,7 +26,12 @@ def train(config: DictConfig):
         config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
     )
 
-    trainer.fit(model=architecture_module, datamodule=dataset_module)
+    trainer.fit(
+        model=architecture_module,
+        train_dataloaders=train_loader,
+        val_dataloaders=val_loader,
+    )
+    # trainer.fit(model=architecture_module, datamodule=dataset_module)
 
 
 @hydra.main(config_path="configs/", config_name="train.yaml")

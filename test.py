@@ -15,7 +15,8 @@ def test(config: DictConfig):
 
     setup = SetUp(config)
 
-    dataset_module = setup.get_dataset_module()
+    test_loader = setup.get_test_loader()
+    # dataset_module = setup.get_dataset_module()
     architecture_module = setup.get_architecture_module()
     callbacks = setup.get_callbacks()
     logger = setup.get_wandb_logger()
@@ -25,8 +26,11 @@ def test(config: DictConfig):
     )
 
     trainer.test(
-        model=architecture_module, datamodule=dataset_module, ckpt_path=config.ckpt_path
+        model=architecture_module, dataloaders=test_loader, ckpt_path=config.ckpt_path
     )
+    # trainer.test(
+    #     model=architecture_module, datamodule=dataset_module, ckpt_path=config.ckpt_path
+    # )
 
 
 @hydra.main(config_path="configs/", config_name="test.yaml")
