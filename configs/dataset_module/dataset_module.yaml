@@ -1,3 +1,3 @@
 _target_: src.dataset_modules.dataset_module.STMapDataModule
-data_path: "C:/project_Han/customized-rhythmnet/preprocessed_dataset/"
+data_path: C:/project_Han/customized-rhythmnet/preprocessed_dataset/
 batch_size: ${batch_size}
