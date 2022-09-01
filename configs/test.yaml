@@ -31,4 +31,4 @@ work_dir: ${hydra:runtime.cwd}
 
 tags: ${model_name}
 
-epoch: 15
+epoch: 100
