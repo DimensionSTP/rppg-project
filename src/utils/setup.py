@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 from omegaconf import DictConfig
@@ -26,7 +25,7 @@ class SetUp:
             dataset=train_dataset,
             batch_size=self.config.batch_size,
             shuffle=True,
-            pin_memory=os.cpu_count(),
+            pin_memory=True,
         )
 
     def get_val_loader(self) -> DataLoader:
@@ -37,7 +36,7 @@ class SetUp:
             dataset=val_dataset,
             batch_size=self.config.batch_size,
             shuffle=False,
-            pin_memory=os.cpu_count(),
+            pin_memory=True,
         )
 
     def get_test_loader(self) -> DataLoader:
@@ -48,7 +47,7 @@ class SetUp:
             dataset=test_dataset,
             batch_size=self.config.batch_size,
             shuffle=False,
-            pin_memory=os.cpu_count(),
+            pin_memory=True,
         )
 
     def get_dataset_module(self) -> LightningDataModule:

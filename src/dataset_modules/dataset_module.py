@@ -1,4 +1,3 @@
-import os
 from typing import Optional
 
 from torch.utils.data import DataLoader
@@ -26,7 +25,7 @@ class STMapDataModule(LightningDataModule):
             dataset=self.train,
             batch_size=self.hparams.batch_size,
             shuffle=True,
-            pin_memory=os.cpu_count(),
+            pin_memory=True,
         )
 
     def val_dataloader(self):
@@ -34,7 +33,7 @@ class STMapDataModule(LightningDataModule):
             dataset=self.val,
             batch_size=self.hparams.batch_size,
             shuffle=False,
-            pin_memory=os.cpu_count(),
+            pin_memory=True,
         )
 
     def test_dataloader(self):
@@ -42,5 +41,5 @@ class STMapDataModule(LightningDataModule):
             dataset=self.test,
             batch_size=self.hparams.batch_size,
             shuffle=False,
-            pin_memory=os.cpu_count(),
+            pin_memory=True,
         )
