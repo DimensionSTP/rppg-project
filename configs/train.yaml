@@ -23,7 +23,7 @@ direction: "bi"
 
 model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
 
-run_name: ${model_name}
+run_name: "${model_name}-train"
 work_dir: ${hydra:runtime.cwd}
 
 tags: ${model_name}

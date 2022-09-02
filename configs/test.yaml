@@ -26,7 +26,7 @@ ckpt_path: "${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt"
 
 model_name: "CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}"
 
-run_name: ${model_name}
+run_name: "${model_name}-test"
 work_dir: ${hydra:runtime.cwd}
 
 tags: ${model_name}
