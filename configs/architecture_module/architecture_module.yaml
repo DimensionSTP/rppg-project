@@ -10,4 +10,4 @@ model:
 lr: 0.0001
 t_max: 50
 eta_min: 0.000025
-interval: "step"
+interval: step
