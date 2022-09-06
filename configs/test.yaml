@@ -21,6 +21,8 @@ rnn_type: gru
 rnn_num_layers: 10
 direction: bi
 
+lr: 0.0001
+
 ckpt_folder: D:/project_Han/customized-rhythmnet/checkpoints/
 ckpt_path: ${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt
 

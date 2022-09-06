@@ -7,7 +7,7 @@ model:
   rnn_num_layers: ${rnn_num_layers}
   direction: ${direction}
 
-lr: 0.0001
+lr: ${lr}
 t_max: 50
 eta_min: 0.000025
 interval: step
