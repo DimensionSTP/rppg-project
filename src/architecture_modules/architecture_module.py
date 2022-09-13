@@ -1,3 +1,5 @@
+import math
+
 from torch import nn, optim
 from torch.nn import functional as F
 
@@ -23,7 +25,8 @@ class RppgPlModule(LightningModule):
         stmap, label = batch
         pred = self(stmap)
         loss = F.mse_loss(pred, label)
-        return loss, pred, label
+        visual_loss = F.l1_loss(pred, label)
+        return loss, pred, label, visual_loss
 
     def configure_optimizers(self):
         adam_w_optimizer = optim.AdamW(self.parameters(), lr=self.lr)
@@ -36,10 +39,19 @@ class RppgPlModule(LightningModule):
         }
 
     def training_step(self, batch, batch_idx):
-        loss, pred, label = self.step(batch)
+        loss, pred, label, visual_loss = self.step(batch)
         self.log(
-            "train_loss",
-            loss,
+            "train_rmse_loss",
+            math.sqrt(loss),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            rank_zero_only=True,
+            sync_dist=False,
+        )
+        self.log(
+            "train_mae_loss",
+            visual_loss,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
@@ -49,10 +61,19 @@ class RppgPlModule(LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss, pred, label = self.step(batch)
+        loss, pred, label, visual_loss = self.step(batch)
         self.log(
-            "val_loss",
-            loss,
+            "val_rmse_loss",
+            math.sqrt(loss),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            rank_zero_only=True,
+            sync_dist=False,
+        )
+        self.log(
+            "val_mae_loss",
+            visual_loss,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
@@ -62,10 +83,19 @@ class RppgPlModule(LightningModule):
         return loss
 
     def test_step(self, batch, batch_idx):
-        loss, pred, label = self.step(batch)
+        loss, pred, label, visual_loss = self.step(batch)
         self.log(
-            "test_loss",
-            loss,
+            "test_rmse_loss",
+            math.sqrt(loss),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            rank_zero_only=True,
+            sync_dist=False,
+        )
+        self.log(
+            "test_mae_loss",
+            visual_loss,
             on_step=False,
             on_epoch=True,
             prog_bar=True,
