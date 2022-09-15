@@ -16,7 +16,8 @@ split:
 
 batch_size: 128
 
-resnet_size: 50
+cnn_model: resnet50
+cnn_pretrained: False
 rnn_type: gru
 rnn_num_layers: 10
 direction: bi
@@ -26,7 +27,7 @@ lr: 0.0001
 ckpt_folder: D:/project_Han/customized-rhythmnet/checkpoints/
 ckpt_path: ${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt
 
-model_name: CustomizedRhythmNet-${resnet_size}-${rnn_type}${rnn_num_layers}-${direction}
+model_name: CustomizedRhythmNet-${cnn_model}-${rnn_type}${rnn_num_layers}-${direction}
 
 run_name: ${model_name}-test
 work_dir: ${hydra:runtime.cwd}

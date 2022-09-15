@@ -1,6 +1,7 @@
 import torch
 from torch import nn
-import torchvision.models as models
+
+import timm
 
 """
 Backbone CNN for RhythmNet model is a RestNet-18
@@ -10,12 +11,18 @@ Backbone CNN for RhythmNet model is a RestNet-18
 class CustomizedRhythmNet(nn.Module):
     def __init__(
         self,
-        resnet_size: int,
+        cnn_model: str,
+        cnn_pretrained: bool,
         rnn_type: str,
         rnn_num_layers: int,
         direction: str,
     ):
         super().__init__()
+
+        if cnn_pretrained:
+            self.cnn_model = timm.create_model(cnn_model, pretrained=True)
+        else:
+            self.cnn_model = timm.create_model(cnn_model, pretrained=False)
 
         if direction == "bi":
             self.fc_rnn = nn.Linear(2000, 1)
@@ -26,19 +33,6 @@ class CustomizedRhythmNet(nn.Module):
         else:
             self.fc_rnn = nn.Linear(2000, 1)
             self.bidirectional = True
-
-        if resnet_size is 18:
-            self.resnet = models.resnet18(pretrained=False)
-        elif resnet_size is 34:
-            self.resnet = models.resnet34(pretrained=False)
-        elif resnet_size is 50:
-            self.resnet = models.resnet50(pretrained=False)
-        elif resnet_size is 101:
-            self.resnet = models.resnet101(pretrained=False)
-        elif resnet_size is 152:
-            self.resnet = models.resnet152(pretrained=False)
-        else:
-            self.resnet = models.resnet18(pretrained=False)
 
         self.fc_regression = nn.Linear(1000, 1)
 
@@ -73,7 +67,7 @@ class CustomizedRhythmNet(nn.Module):
         hr_per_clip = []
 
         for t in range(st_maps.size(1)):
-            x = self.resnet(st_maps[:, t, :, :, :])
+            x = self.cnn_model(st_maps[:, t, :, :, :])
             # Save CNN features per clip for the RNN
             rnn_input_per_clip.append(x)
             # Final regression layer for CNN features -> HR (per clip)
@@ -95,7 +89,7 @@ class CustomizedRhythmNet(nn.Module):
 
 
 if __name__ == "__main__":
-    model = CustomizedRhythmNet(50, "gru", 10, "bi")
+    model = CustomizedRhythmNet("seresnext26d_32x4d", False, "gru", 10, "bi")
     img = torch.rand(4, 10, 3, 300, 25) * 255
     reg_out, rnn_out = model(img)
     reg_out = reg_out.detach().numpy()

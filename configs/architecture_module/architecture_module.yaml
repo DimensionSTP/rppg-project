@@ -2,7 +2,8 @@ _target_: src.architecture_modules.architecture_module.RppgPlModule
 
 model:
   _target_: src.architecture_modules.models.customized_rhythmnet.CustomizedRhythmNet
-  resnet_size: ${resnet_size}
+  cnn_model: ${cnn_model}
+  cnn_pretrained: ${cnn_pretrained}
   rnn_type: ${rnn_type}
   rnn_num_layers: ${rnn_num_layers}
   direction: ${direction}
