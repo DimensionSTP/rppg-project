@@ -1,37 +1,9 @@
 import hydra
-from hydra.utils import instantiate
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
-from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.utilities.distributed import rank_zero_info
 
-from src.utils.setup import SetUp
-
-
-def train(config: DictConfig):
-
-    if "seed" in config:
-        seed_everything(config.seed)
-
-    setup = SetUp(config)
-
-    train_loader = setup.get_train_loader()
-    val_loader = setup.get_val_loader()
-    # dataset_module = setup.get_dataset_module()
-    architecture_module = setup.get_architecture_module()
-    callbacks = setup.get_callbacks()
-    logger = setup.get_wandb_logger()
-
-    trainer: Trainer = instantiate(
-        config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
-    )
-
-    trainer.fit(
-        model=architecture_module,
-        train_dataloaders=train_loader,
-        val_dataloaders=val_loader,
-    )
-    # trainer.fit(model=architecture_module, datamodule=dataset_module)
+from src.engine.engine import train
 
 
 @hydra.main(config_path="configs/", config_name="train.yaml")
