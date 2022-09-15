@@ -19,10 +19,7 @@ class CustomizedRhythmNet(nn.Module):
     ):
         super().__init__()
 
-        if cnn_pretrained:
-            self.cnn_model = timm.create_model(cnn_model, pretrained=True)
-        else:
-            self.cnn_model = timm.create_model(cnn_model, pretrained=False)
+        self.cnn_model = timm.create_model(cnn_model, pretrained=cnn_pretrained)
 
         if direction == "bi":
             self.fc_rnn = nn.Linear(2000, 1)
