@@ -1,0 +1,2 @@
+- cnn_model=regnetx_002
+- batch_size=64

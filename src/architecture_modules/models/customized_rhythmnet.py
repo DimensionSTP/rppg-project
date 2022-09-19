@@ -11,15 +11,15 @@ Backbone CNN for RhythmNet model is a RestNet-18
 class CustomizedRhythmNet(nn.Module):
     def __init__(
         self,
-        cnn_model: str,
-        cnn_pretrained: bool,
+        backbone: str,
+        backbone_pretrained: bool,
         rnn_type: str,
         rnn_num_layers: int,
         direction: str,
     ):
         super().__init__()
 
-        self.cnn_model = timm.create_model(cnn_model, pretrained=cnn_pretrained)
+        self.backbone = timm.create_model(backbone, pretrained=backbone_pretrained)
 
         if direction == "bi":
             self.fc_rnn = nn.Linear(2000, 1)
@@ -64,7 +64,7 @@ class CustomizedRhythmNet(nn.Module):
         hr_per_clip = []
 
         for t in range(st_maps.size(1)):
-            x = self.cnn_model(st_maps[:, t, :, :, :])
+            x = self.backbone(st_maps[:, t, :, :, :])
             # Save CNN features per clip for the RNN
             rnn_input_per_clip.append(x)
             # Final regression layer for CNN features -> HR (per clip)

@@ -16,15 +16,16 @@ split:
 
 batch_size: 128
 
-cnn_model: resnet50
-cnn_pretrained: False
+backbone: resnet50
+backbone_pretrained: False
 rnn_type: gru
 rnn_num_layers: 10
 direction: bi
 
 lr: 0.0001
 
-model_name: CustomizedRhythmNet-${cnn_model}-${rnn_type}${rnn_num_layers}-${direction}
+project_name: CustomizedRhythmNet
+model_name: ${project_name}-${backbone}-${rnn_type}${rnn_num_layers}-${direction}
 
 ckpt_folder: D:/project_Han/customized-rhythmnet/checkpoints/
 ckpt_path: ${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt
