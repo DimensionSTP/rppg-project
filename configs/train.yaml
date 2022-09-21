@@ -24,7 +24,8 @@ direction: bi
 
 lr: 0.0001
 
-model_name: CustomizedRhythmNet-${backbone}-${rnn_type}${rnn_num_layers}-${direction}
+project_name: CustomizedRhythmNet
+model_name: ${project_name}-${backbone}-${rnn_type}${rnn_num_layers}-${direction}
 
 run_name: ${model_name}-train
 work_dir: ${hydra:runtime.cwd}
