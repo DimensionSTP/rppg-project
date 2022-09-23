@@ -1,36 +1,14 @@
-python test.py backbone=regnety_002 batch_size=64 epoch=6
-python test.py backbone=regnety_002 batch_size=64 epoch=8
-python test.py backbone=regnety_002 batch_size=64 epoch=9
-python test.py backbone=regnety_004 batch_size=64 epoch=6
-python test.py backbone=regnety_004 batch_size=64 epoch=7
-python test.py backbone=regnety_004 batch_size=64 epoch=10
-python test.py backbone=regnety_006 batch_size=64 epoch=10
-python test.py backbone=regnety_006 batch_size=64 epoch=11
-python test.py backbone=regnety_006 batch_size=64 epoch=13
-python test.py backbone=regnety_008 batch_size=64 epoch=10
-python test.py backbone=regnety_008 batch_size=64 epoch=13
-python test.py backbone=regnety_008 batch_size=64 epoch=16
-python test.py backbone=regnety_016 batch_size=64 epoch=10
-python test.py backbone=regnety_016 batch_size=64 epoch=12
-python test.py backbone=regnety_016 batch_size=64 epoch=13
-python test.py backbone=regnety_032 batch_size=64 epoch=7
-python test.py backbone=regnety_032 batch_size=64 epoch=9
-python test.py backbone=regnety_032 batch_size=64 epoch=12
-python test.py backbone=regnety_040 batch_size=64 epoch=5
-python test.py backbone=regnety_040 batch_size=64 epoch=6
-python test.py backbone=regnety_040 batch_size=64 epoch=8
-python test.py backbone=regnety_064 batch_size=64 epoch=6
-python test.py backbone=regnety_064 batch_size=64 epoch=8
-python test.py backbone=regnety_064 batch_size=64 epoch=9
-python test.py backbone=regnety_080 batch_size=64 epoch=9
-python test.py backbone=regnety_080 batch_size=64 epoch=10
-python test.py backbone=regnety_080 batch_size=64 epoch=13
-python test.py backbone=regnety_120 batch_size=64 epoch=7
-python test.py backbone=regnety_120 batch_size=64 epoch=9
-python test.py backbone=regnety_120 batch_size=64 epoch=10
-python test.py backbone=regnety_160 batch_size=64 epoch=5
-python test.py backbone=regnety_160 batch_size=64 epoch=6
-python test.py backbone=regnety_160 batch_size=64 epoch=7
-python test.py backbone=regnety_320 batch_size=32 epoch=2
-python test.py backbone=regnety_320 batch_size=32 epoch=4
-python test.py backbone=regnety_320 batch_size=32 epoch=5
+model_list="regnety_002 regnety_004 regnety_006 regnety_008 regnety_016 regnety_032 regnety_040 regnety_064 regnety_080 regnety_120 regnety_160"
+
+for model in $model_list
+do
+    for ((epoch = 5; epoch <= 16; epoch++))
+    do
+        python test.py backbone=$model batch_size=64 epoch=$epoch
+    done
+done
+
+for epoch in "2 4 5"
+do
+    python test.py backbone=regnety_320 batch_size=32 epoch=$epoch
+done
