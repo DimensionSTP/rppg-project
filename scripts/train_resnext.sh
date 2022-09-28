@@ -1,7 +1,6 @@
-# model_list = "resnext50_32x4d resnext50d_32x4d resnext101_32x4d resnext101_32x8d resnext101_64x4d"
-model_list="resnext101_32x4d resnext101_32x8d resnext101_64x4d"
+model_list0="resnext50_32x4d resnext50d_32x4d resnext101_32x4d resnext101_32x8d resnext101_64x4d"
 
-for model in $model_list
+for model in $model_list0
 do
     python train.py backbone=$model batch_size=64
 done
