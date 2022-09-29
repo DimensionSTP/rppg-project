@@ -1,6 +1,6 @@
 # @package _global_
 defaults:
-  - dataset_module: stmap_custom_datamodule
+  - dataset_module: stmap_custom_dataset
   - architecture_module: basic_rhythm_archimodule
   - logger: wandb
   - hydra: hydra
