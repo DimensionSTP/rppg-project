@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-class STMapDataset(Dataset):
+class CustomDataset(Dataset):
     def __init__(self, data_path: str, split: str):
         super().__init__()
         self.data_list = self.load_data(data_path, split)

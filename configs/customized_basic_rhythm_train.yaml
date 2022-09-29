@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
-  - dataset_module: dataset
-  - architecture_module: architecture_module
+  - dataset_module: stmap_custom_datamodule
+  - architecture_module: basic_rhythm_archimodule
   - logger: wandb
   - hydra: hydra
   - callbacks: callbacks
@@ -27,10 +27,7 @@ lr: 0.0001
 project_name: CustomizedRhythmNet
 model_name: ${project_name}-${backbone}-${rnn_type}${rnn_num_layers}-${direction}
 
-ckpt_folder: D:/project_Han/customized-rhythmnet/checkpoints/
-ckpt_path: ${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt
-
-run_name: ${model_name}-test
+run_name: ${model_name}-train
 work_dir: ${hydra:runtime.cwd}
 
 tags: ${model_name}

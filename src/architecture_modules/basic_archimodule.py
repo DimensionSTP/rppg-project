@@ -6,7 +6,7 @@ from torch.nn import functional as F
 from pytorch_lightning import LightningModule
 
 
-class RppgPlModule(LightningModule):
+class RbpmPlModule(LightningModule):
     def __init__(
         self, model: nn.Module, lr: float, t_max: int, eta_min: float, interval: str
     ):

@@ -4,21 +4,21 @@ from torch.utils.data import DataLoader
 
 from pytorch_lightning import LightningDataModule
 
-from .datasets.dataset import STMapDataset
+from .datasets.stmap_dataset import CustomDataset
 
 
-class STMapDataModule(LightningDataModule):
+class CustomDataModule(LightningDataModule):
     def __init__(self, data_path: str, batch_size: int):
         super().__init__()
         self.save_hyperparameters(logger=False)
 
     def setup(self, stage: Optional[str] = None):
         if stage == "fit" or stage is None:
-            self.train = STMapDataset(data_path=self.hparams.data_path, split="train")
-            self.val = STMapDataset(data_path=self.hparams.data_path, split="val")
+            self.train = CustomDataset(data_path=self.hparams.data_path, split="train")
+            self.val = CustomDataset(data_path=self.hparams.data_path, split="val")
 
         if stage == "test" or stage is None:
-            self.test = STMapDataset(data_path=self.hparams.data_path, split="test")
+            self.test = CustomDataset(data_path=self.hparams.data_path, split="test")
 
     def train_dataloader(self):
         return DataLoader(

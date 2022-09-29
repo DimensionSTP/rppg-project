@@ -1,0 +1,3 @@
+_target_: src.dataset_modules.stmap_datamodule.CustomDataModule
+data_path: C:/project_Han/rppg-project/preprocessed_dataset/
+batch_size: ${batch_size}

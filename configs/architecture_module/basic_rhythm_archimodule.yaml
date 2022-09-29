@@ -1,4 +1,4 @@
-_target_: src.architecture_modules.architecture_module.RppgPlModule
+_target_: src.architecture_modules.basic_archimodule.RbpmPlModule
 
 model:
   _target_: src.architecture_modules.models.customized_rhythmnet.CustomizedRhythmNet
