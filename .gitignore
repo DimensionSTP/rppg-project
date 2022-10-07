@@ -1,9 +1,9 @@
-*.txt
+*.ckpt
+*.csv
 *.mp4
 *.npy
-*.csv
+*.txt
 *.xml
-*.ckpt
 *__pycache__
 logs/runs/
 logs/wandb/
