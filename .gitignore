@@ -8,4 +8,4 @@
 logs/runs/
 logs/wandb/
 multirun/
-tmp.py
+tmp*
