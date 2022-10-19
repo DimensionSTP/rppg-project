@@ -2,5 +2,5 @@ model_list="regnety_002 regnety_004 regnety_006 regnety_008 regnety_016 regnety_
 
 for model in $model_list
 do
-    python train.py backbone=$model batch_size=32
+    python train.py backbone=$model batch_size=64
 done
