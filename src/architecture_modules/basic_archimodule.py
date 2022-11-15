@@ -102,3 +102,7 @@ class RbpmPlModule(LightningModule):
             rank_zero_only=True,
             sync_dist=False,
         )
+
+    def predict_step(self, batch, batch_idx):
+        output = self(batch)
+        print(output)
