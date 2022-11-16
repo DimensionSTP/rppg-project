@@ -21,7 +21,7 @@ batch_size: 128
 backbone: resnet50
 backbone_pretrained: False
 rnn_type: gru
-rnn_num_layers: 10
+rnn_num_layers: 1
 direction: bi
 
 lr: 0.0001
