@@ -1,5 +1,7 @@
 import math
 
+import pandas as pd
+
 from torch import nn, optim
 from torch.nn import functional as F
 
@@ -8,7 +10,13 @@ from pytorch_lightning import LightningModule
 
 class RbpmPlModule(LightningModule):
     def __init__(
-        self, model: nn.Module, lr: float, t_max: int, eta_min: float, interval: str
+        self,
+        model: nn.Module,
+        lr: float,
+        t_max: int,
+        eta_min: float,
+        interval: str,
+        project_dir: str,
     ):
         super().__init__()
         self.model = model
@@ -16,6 +24,7 @@ class RbpmPlModule(LightningModule):
         self.t_max = t_max
         self.eta_min = eta_min
         self.interval = interval
+        self.project_dir = project_dir
 
     def forward(self, stmap):
         _, output = self.model(stmap)
@@ -104,5 +113,11 @@ class RbpmPlModule(LightningModule):
         )
 
     def predict_step(self, batch, batch_idx):
-        output = self(batch)
-        print(output)
+        loss, pred, label, visual_loss = self.step(batch)
+        pred = pred.view(-1)
+        label = label.view(-1)
+        pred = pred.tolist()
+        label = label.tolist()
+        table = {"pred": pred, "label": label}
+        df = pd.DataFrame(table)
+        df.to_csv(f"{self.project_dir}/records/{batch_idx}.csv", index=False)
