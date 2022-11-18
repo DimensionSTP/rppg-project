@@ -8,6 +8,7 @@ defaults:
   - trainer: trainer
 
 project_dir: C:/project_Han/rppg-project
+save_load_dir: D:/project_Han/rppg-project
 
 seed: 2022
 
