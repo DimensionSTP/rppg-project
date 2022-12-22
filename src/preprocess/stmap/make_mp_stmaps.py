@@ -1,3 +1,4 @@
+import os
 import glob
 
 from tqdm import tqdm
@@ -5,6 +6,8 @@ import cv2
 import numpy as np
 import mediapipe as mp
 from sklearn.preprocessing import MinMaxScaler
+
+import pandas as pd
 
 # Chunks the ROI into blocks of size 5x5
 def chunkify(img, block_width=5, block_height=5):
@@ -73,7 +76,8 @@ def preprocess_video_to_st_maps(video_path):
     num_frames = frames.shape[0]
     x_size = frames.shape[2]
     y_size = frames.shape[1]
-    clip_size = int(frame_rate * 10)
+    # clip_size = int(frame_rate * 10)
+    clip_size = 300
     num_maps = int((num_frames - clip_size) / sliding_window_stride + 1)
     if num_maps < 0:
         print(video_path)
@@ -81,8 +85,10 @@ def preprocess_video_to_st_maps(video_path):
 
     # stacked_maps is the all the st maps for a given video (=num_maps) stacked.
     stacked_maps = np.zeros((num_maps, 3, clip_size, 25))
+    # stacked_maps = np.zeros((num_maps, 3, clip_size, 255))
     # processed_maps will contain all the data after processing each frame, but not yet converted into maps
     processed_frames = []
+    stacked_coordinates = []
     map_index = 0
 
     # Init scaler and detector
@@ -99,7 +105,7 @@ def preprocess_video_to_st_maps(video_path):
         Step 2: Crop the frame based on the face co-ordinates (we need to do 160%)
         Step 3: Downsample the face cropped frame to output_shape = 36x36
         """
-        frame = cv2.flip(frame, 0)
+        # frame = cv2.flip(frame, 0)
         faces = detector.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         # face detected
         if isinstance(faces.detections, list):
@@ -120,7 +126,9 @@ def preprocess_video_to_st_maps(video_path):
                 or height >= 1.0
                 or height <= 0.0
             ):
+                frame_cropped = frame
                 frame_masked = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                coordinate = [0, 0, 0, 0]
             else:
                 x = int(xmin * x_size)
                 y = int(ymin * y_size)
@@ -128,11 +136,13 @@ def preprocess_video_to_st_maps(video_path):
                 h = int(height * y_size)
 
                 frame_cropped = frame[y : (y + h), x : (x + w)]
-
                 frame_masked = frame_cropped
+                coordinate = [x, y, w, h]
         # face undetected
         else:
+            frame_cropped = frame
             frame_masked = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            coordinate = [0, 0, 0, 0]
 
         try:
             frame_yuv = cv2.cvtColor(frame_masked, cv2.COLOR_RGB2YUV)
@@ -144,6 +154,17 @@ def preprocess_video_to_st_maps(video_path):
             exit(666)
 
         processed_frames.append(frame_yuv)
+        stacked_coordinates.append(coordinate)
+
+        if not os.path.exists(f"{video_path[:-10]}/mp_rgb_full/"):
+            os.makedirs(f"{video_path[:-10]}/mp_rgb_full/")
+        if not os.path.exists(f"{video_path[:-10]}/mp_yuv_full/"):
+            os.makedirs(f"{video_path[:-10]}/mp_yuv_full/")
+
+        cv2.imwrite(
+            f"{video_path[:-10]}/mp_rgb_full/image_{idx:05d}.png", frame_cropped
+        )
+        cv2.imwrite(f"{video_path[:-10]}/mp_yuv_full/image_{idx:05d}.png", frame_yuv)
 
     # At this point we have the processed maps from all the frames in a video and now we do the sliding window part.
     for start_frame_index in tqdm(
@@ -153,11 +174,18 @@ def preprocess_video_to_st_maps(video_path):
         if end_frame_index > num_frames:
             break
         spatio_temporal_map = np.zeros((3, clip_size, 25))
+        # spatio_temporal_map = np.zeros((3, clip_size, 255))
 
         for idx, frame in enumerate(
             processed_frames[start_frame_index:end_frame_index]
         ):
             roi_blocks = chunkify(frame)
+            # roi_blocks_5 = chunkify(frame, 5, 5)
+            # roi_blocks_6 = chunkify(frame, 6, 6)
+            # roi_blocks_7 = chunkify(frame, 7, 7)
+            # roi_blocks_8 = chunkify(frame, 8, 8)
+            # roi_blocks_9 = chunkify(frame, 9, 9)
+            # roi_blocks = roi_blocks_5 + roi_blocks_6 + roi_blocks_7 + roi_blocks_8 + roi_blocks_9
             for block_idx, block in enumerate(roi_blocks):
                 avg_pixels = cv2.mean(block)
                 spatio_temporal_map[0, idx, block_idx] = avg_pixels[0]
@@ -189,16 +217,85 @@ def preprocess_video_to_st_maps(video_path):
         stacked_maps[map_index, :, :, :] = spatio_temporal_map
         map_index += 1
 
-    return stacked_maps, clip_size
+    # return stacked_maps, clip_size
+    return stacked_maps, clip_size, stacked_coordinates
 
 
 if __name__ == "__main__":
-    videos = glob.glob("./preprocessing/raw/cam/*.mp4")
+    # videos = glob.glob("./preprocessing/raw/cam_under300/*.mp4")
+    # for idx, video in enumerate(videos):
+    #     print("-"*200)
+    #     print(f"Order {idx+1}, {video[-10:]} processing start!")
+    #     stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
+    #     print(f"Order {idx+1}, {video[-10:]} processing done!")
+    #     coordinates_df = pd.DataFrame(coordinates, columns=['x', 'y', 'w', 'h'])
+    #     np.save(f"./preprocessing/mp_stmaps_under300/{video[-10:-4]}_{clip_size}.npy", stmap)
+    #     coordinates_df.to_csv(f"./preprocessing/coordinates_under300/{video[-10:-4]}_{clip_size}.csv", index=False)
+    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.npy saved!")
+    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.csv saved!")
+    #     print("-"*200)
+
+    # videos = glob.glob("./preprocessing/raw/cam/*.mp4")
+    # for idx, video in enumerate(videos):
+    #     print("-"*200)
+    #     print(f"Order {idx+1}, {video[-10:]} processing start!")
+    #     stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
+    #     print(f"Order {idx+1}, {video[-10:]} processing done!")
+    #     coordinates_df = pd.DataFrame(coordinates, columns=['x', 'y', 'w', 'h'])
+    #     np.save(f"./preprocessing/mp_stmaps/{video[-10:-4]}_{clip_size}.npy", stmap)
+    #     coordinates_df.to_csv(f"./preprocessing/coordinates/{video[-10:-4]}_{clip_size}.csv", index=False)
+    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.npy saved!")
+    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.csv saved!")
+    #     print("-"*200)
+
+    # df = pd.read_csv("D:/project_Han/rppg-project/vipl-dataset/VIPL_fold1_train.txt", delimiter=" ", header=None)
+    # df = df[df[1]==61]
+    # videos = df[0].values.tolist()
+    # videos = [f"D:/project_Han/rppg-project/vipl-dataset/data/{i}/video.avi" for i in videos]
+    # videos = videos[1636:]
+    # for idx, video in enumerate(videos):
+    #     split = video.split("/")
+    #     print("-"*200)
+    #     print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]} processing start!")
+    #     # stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
+    #     preprocess_video_to_st_maps(video)
+    #     print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]} processing done!")
+    #     # coordinates_df = pd.DataFrame(coordinates, columns=['x', 'y', 'w', 'h'])
+    #     # np.save(f"D:/project_Han/rppg-project/preprocessing/vipl_mp_stmaps/{split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.npy", stmap)
+    #     # coordinates_df.to_csv(f"D:/project_Han/rppg-project/preprocessing/vipl_coordinates/{split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.csv", index=False)
+    #     # print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.npy saved!")
+    #     # print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.csv saved!")
+    #     print("-"*200)
+
+    videos = []
+    for (path, dir, files) in os.walk("D:/project_Han/rppg-project/vipl-dataset/data/"):
+        for filename in files:
+            ext = os.path.splitext(filename)[-1]
+            if ext == ".avi":
+                path = path.replace("\\", "/", 10)
+                videos.append(f"{path}/{filename}")
+                print("%s/%s" % (path, filename))
+    videos = [i for i in videos if "source4" not in i]
     for idx, video in enumerate(videos):
+        split = video.split("/")
         print("-" * 200)
-        print(f"Order {idx+1}, {video[-10:]} processing start!")
-        stmap, clip_size = preprocess_video_to_st_maps(video)
-        print(f"Order {idx+1}, {video[-10:]} processing done!")
-        np.save(f"./preprocessing/mp_stmaps/{video[-10:-4]}_{clip_size}.npy", stmap)
-        print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.npy saved!")
+        print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]} processing start!")
+        stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
+        # preprocess_video_to_st_maps(video)
+        print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]} processing done!")
+        coordinates_df = pd.DataFrame(coordinates, columns=["x", "y", "w", "h"])
+        np.save(
+            f"D:/project_Han/rppg-project/preprocessing/vipl_mp_stmaps/{split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.npy",
+            stmap,
+        )
+        coordinates_df.to_csv(
+            f"D:/project_Han/rppg-project/preprocessing/vipl_coordinates/{split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.csv",
+            index=False,
+        )
+        print(
+            f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.npy saved!"
+        )
+        print(
+            f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.csv saved!"
+        )
         print("-" * 200)
