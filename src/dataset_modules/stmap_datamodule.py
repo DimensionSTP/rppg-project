@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 from pytorch_lightning import LightningDataModule
 
-from .datasets.stmap_dataset import CustomDataset
+from .stmap_dataset import CustomDataset
 
 
 class CustomDataModule(LightningDataModule):

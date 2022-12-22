@@ -3,7 +3,7 @@ from omegaconf import OmegaConf
 
 from pytorch_lightning.utilities.distributed import rank_zero_info
 
-from src.engine.engine import test
+from src.pipeline.pipeline import test
 
 
 @hydra.main(config_path="configs/", config_name="customized_basic_rhythm_test.yaml")

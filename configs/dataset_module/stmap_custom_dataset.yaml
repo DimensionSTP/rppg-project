@@ -1,3 +1,3 @@
-_target_: src.dataset_modules.datasets.stmap_dataset.CustomDataset
+_target_: src.dataset_modules.stmap_dataset.CustomDataset
 data_path: ${save_load_dir}/preprocessed_dataset/
 split: train
