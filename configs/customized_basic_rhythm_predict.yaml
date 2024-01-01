@@ -7,10 +7,10 @@ defaults:
   - callbacks: callbacks
   - trainer: trainer
 
-project_dir: C:/project_Han/rppg-project
-save_load_dir: D:/project_Han/rppg-project
+project_dir: /home/ddang/rppg-project
+save_load_dir: /data
 
-seed: 2022
+seed: 2024
 
 split:
   train: train
