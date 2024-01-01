@@ -222,60 +222,16 @@ def preprocess_video_to_st_maps(video_path):
 
 
 if __name__ == "__main__":
-    # videos = glob.glob("./preprocessing/raw/cam_under300/*.mp4")
-    # for idx, video in enumerate(videos):
-    #     print("-"*200)
-    #     print(f"Order {idx+1}, {video[-10:]} processing start!")
-    #     stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
-    #     print(f"Order {idx+1}, {video[-10:]} processing done!")
-    #     coordinates_df = pd.DataFrame(coordinates, columns=['x', 'y', 'w', 'h'])
-    #     np.save(f"./preprocessing/mp_stmaps_under300/{video[-10:-4]}_{clip_size}.npy", stmap)
-    #     coordinates_df.to_csv(f"./preprocessing/coordinates_under300/{video[-10:-4]}_{clip_size}.csv", index=False)
-    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.npy saved!")
-    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.csv saved!")
-    #     print("-"*200)
-
-    # videos = glob.glob("./preprocessing/raw/cam/*.mp4")
-    # for idx, video in enumerate(videos):
-    #     print("-"*200)
-    #     print(f"Order {idx+1}, {video[-10:]} processing start!")
-    #     stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
-    #     print(f"Order {idx+1}, {video[-10:]} processing done!")
-    #     coordinates_df = pd.DataFrame(coordinates, columns=['x', 'y', 'w', 'h'])
-    #     np.save(f"./preprocessing/mp_stmaps/{video[-10:-4]}_{clip_size}.npy", stmap)
-    #     coordinates_df.to_csv(f"./preprocessing/coordinates/{video[-10:-4]}_{clip_size}.csv", index=False)
-    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.npy saved!")
-    #     print(f"Order {idx+1}, {video[-10:-4]}_{clip_size}.csv saved!")
-    #     print("-"*200)
-
-    # df = pd.read_csv("D:/project_Han/rppg-project/vipl-dataset/VIPL_fold1_train.txt", delimiter=" ", header=None)
-    # df = df[df[1]==61]
-    # videos = df[0].values.tolist()
-    # videos = [f"D:/project_Han/rppg-project/vipl-dataset/data/{i}/video.avi" for i in videos]
-    # videos = videos[1636:]
-    # for idx, video in enumerate(videos):
-    #     split = video.split("/")
-    #     print("-"*200)
-    #     print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]} processing start!")
-    #     # stmap, clip_size, coordinates = preprocess_video_to_st_maps(video)
-    #     preprocess_video_to_st_maps(video)
-    #     print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]} processing done!")
-    #     # coordinates_df = pd.DataFrame(coordinates, columns=['x', 'y', 'w', 'h'])
-    #     # np.save(f"D:/project_Han/rppg-project/preprocessing/vipl_mp_stmaps/{split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.npy", stmap)
-    #     # coordinates_df.to_csv(f"D:/project_Han/rppg-project/preprocessing/vipl_coordinates/{split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.csv", index=False)
-    #     # print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.npy saved!")
-    #     # print(f"Order {idx+1}, {split[-4]}_{split[-3]}_{split[-2]}_{clip_size}.csv saved!")
-    #     print("-"*200)
-
     videos = []
-    for (path, dir, files) in os.walk("D:/project_Han/rppg-project/vipl-dataset/data/"):
+    for (path, dir, files) in os.walk("/data/VIPL-HR-V1/data/"):
         for filename in files:
             ext = os.path.splitext(filename)[-1]
             if ext == ".avi":
-                path = path.replace("\\", "/", 10)
+                # path = path.replace("\\", "/", 10)
                 videos.append(f"{path}/{filename}")
                 print("%s/%s" % (path, filename))
     videos = [i for i in videos if "source4" not in i]
+    videos = sorted(videos)
     for idx, video in enumerate(videos):
         split = video.split("/")
         print("-" * 200)
