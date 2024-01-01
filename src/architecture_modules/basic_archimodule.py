@@ -55,8 +55,7 @@ class RbpmPlModule(LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            rank_zero_only=True,
-            sync_dist=False,
+            sync_dist=True,
         )
         self.log(
             "train_mae_loss",
@@ -64,8 +63,7 @@ class RbpmPlModule(LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            rank_zero_only=True,
-            sync_dist=False,
+            sync_dist=True,
         )
         return loss
 
@@ -77,8 +75,7 @@ class RbpmPlModule(LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            rank_zero_only=True,
-            sync_dist=False,
+            sync_dist=True,
         )
         self.log(
             "val_mae_loss",
@@ -86,8 +83,7 @@ class RbpmPlModule(LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            rank_zero_only=True,
-            sync_dist=False,
+            sync_dist=True,
         )
         return loss
 
@@ -99,8 +95,7 @@ class RbpmPlModule(LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            rank_zero_only=True,
-            sync_dist=False,
+            sync_dist=True,
         )
         self.log(
             "test_mae_loss",
@@ -108,8 +103,7 @@ class RbpmPlModule(LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            rank_zero_only=True,
-            sync_dist=False,
+            sync_dist=True,
         )
 
     def predict_step(self, batch, batch_idx):
@@ -121,3 +115,12 @@ class RbpmPlModule(LightningModule):
         table = {"pred": pred, "label": label}
         df = pd.DataFrame(table)
         df.to_csv(f"{self.project_dir}/records/{batch_idx}.csv", index=False)
+
+    def train_epoch_end(self, train_step_outputs):
+        pass
+
+    def validation_epoch_end(self, validation_step_outputs):
+        pass
+
+    def test_epoch_end(self, test_step_outputs):
+        pass
