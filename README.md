@@ -1,42 +1,21 @@
 # rPPG packaging project
 
-## Package structure
+## rPPG custom project
 
-project tree
+### Dataset
+VIPL-HR-V1
+Pesonal
 
-├─checkpoints  
-├─configs  
-│  ├─architecture_module  
-│  ├─callbacks  
-│  ├─dataset_module  
-│  ├─hydra  
-│  ├─logger  
-│  └─trainer  
-├─logs  
-│  ├─runs  
-│  └─wandb  
-├─preprocessed_dataset  
-│  ├─test  
-│  ├─train  
-│  └─val  
-├─preprocessing  
-│  ├─hrv  
-│  │  ├─data  
-│  │  ├─raw  
-│  │  └─result  
-│  └─raw  
-│      ├─cam  
-│      └─ecg  
-└─src  
-    ├─architecture_modules  
-    │  └─models  
-    ├─dataset_modules  
-    │  └─datasets  
-    ├─preprocess  
-    │  ├─hrv  
-    │  └─stmap  
-    └─utils  
+### Training
 
-for train
+* end-to-end
+```shell
+python train.py
+```
 
-    python train.py
+### Testing
+
+* end-to-end
+```shell
+python test.py
+```
