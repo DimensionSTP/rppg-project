@@ -14,7 +14,7 @@ class VIPLDataset(Dataset):
         clip_frame_size: int,
         preprocessed_dataset: str,
         data_path: str,
-        transform: torch.transform,
+        transform: torch,
     ):
         super().__init__()
         self.clip_frame_size = clip_frame_size

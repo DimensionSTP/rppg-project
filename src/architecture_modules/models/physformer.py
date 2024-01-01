@@ -1,83 +1,12 @@
-"""model.py - Model and module class for ViT.
-   They are built to mirror those in the official Jax implementation.
-"""
-
 from typing import Optional
 import torch
 from torch import nn
-from torch.nn import functional as F
-import math
 
 from .transformer_layer import Transformer_ST_TDC_gra_sharp
-
-import pdb
 
 
 def as_tuple(x):
     return x if isinstance(x, tuple) else (x, x)
-
-
-"""
-Temporal Center-difference based Convolutional layer (3D version)
-theta: control the percentage of original convolution and centeral-difference convolution
-"""
-
-
-class CDC_T(nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size=3,
-        stride=1,
-        padding=1,
-        dilation=1,
-        groups=1,
-        bias=False,
-        theta=0.6,
-    ):
-
-        super(CDC_T, self).__init__()
-        self.conv = nn.Conv3d(
-            in_channels,
-            out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-            groups=groups,
-            bias=bias,
-        )
-        self.theta = theta
-
-    def forward(self, x):
-        out_normal = self.conv(x)
-
-        if math.fabs(self.theta - 0.0) < 1e-8:
-            return out_normal
-        else:
-            # pdb.set_trace()
-            [C_out, C_in, t, kernel_size, kernel_size] = self.conv.weight.shape
-
-            # only CD works on temporal kernel size>1
-            if self.conv.weight.shape[2] > 1:
-                kernel_diff = self.conv.weight[:, :, 0, :, :].sum(2).sum(
-                    2
-                ) + self.conv.weight[:, :, 2, :, :].sum(2).sum(2)
-                kernel_diff = kernel_diff[:, :, None, None, None]
-                out_diff = F.conv3d(
-                    input=x,
-                    weight=kernel_diff,
-                    bias=self.conv.bias,
-                    stride=self.conv.stride,
-                    padding=0,
-                    dilation=self.conv.dilation,
-                    groups=self.conv.groups,
-                )
-                return out_normal - self.theta * out_diff
-
-            else:
-                return out_normal
 
 
 # stem_3DCNN + ST-ViT with local Depthwise Spatio-Temporal MLP

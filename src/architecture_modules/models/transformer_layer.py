@@ -1,15 +1,8 @@
-"""
-Adapted from https://github.com/lukemelas/simple-bert
-"""
-
 import numpy as np
 from torch import nn
-from torch import Tensor
 from torch.nn import functional as F
-import torch
 import math
 
-import pdb
 
 """
 Temporal Center-difference based Convolutional layer (3D version)
