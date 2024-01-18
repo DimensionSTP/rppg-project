@@ -19,6 +19,7 @@ conda activate myenv
 
 # install requirements
 pip install -r requirements.txt
+```
 
 ### Training
 
