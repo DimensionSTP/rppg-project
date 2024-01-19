@@ -6,7 +6,7 @@ from pytorch_lightning import Trainer, seed_everything
 from ..utils.setup import SetUp
 
 
-def train(config: DictConfig):
+def train(config: DictConfig,) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)
@@ -29,10 +29,9 @@ def train(config: DictConfig):
         train_dataloaders=train_loader,
         val_dataloaders=val_loader,
     )
-    # trainer.fit(model=architecture_module, datamodule=dataset_module)
 
 
-def test(config: DictConfig):
+def test(config: DictConfig,) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)
@@ -52,12 +51,9 @@ def test(config: DictConfig):
     trainer.test(
         model=architecture_module, dataloaders=test_loader, ckpt_path=config.ckpt_path
     )
-    # trainer.test(
-    #     model=architecture_module, datamodule=dataset_module, ckpt_path=config.ckpt_path
-    # )
 
 
-def predict(config: DictConfig):
+def predict(config: DictConfig,) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)

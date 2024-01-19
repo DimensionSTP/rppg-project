@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 from torch import nn
 
@@ -16,7 +18,7 @@ class CustomizedRhythmNet(nn.Module):
         rnn_type: str,
         rnn_num_layers: int,
         direction: str,
-    ):
+    ) -> None:
         super().__init__()
 
         self.backbone = timm.create_model(backbone, pretrained=backbone_pretrained)
@@ -58,7 +60,7 @@ class CustomizedRhythmNet(nn.Module):
                 bidirectional=self.bidirectional,
             )
 
-    def forward(self, st_maps):
+    def forward(self, st_maps:torch.Tensor,) -> Tuple[torch.Tensor, torch.Tensor]:
         batched_output_per_clip = []
         rnn_input_per_clip = []
         hr_per_clip = []
@@ -82,7 +84,7 @@ class CustomizedRhythmNet(nn.Module):
             hr = self.fc_rnn(rnn_output[:, i, :])
             hr_per_clip.append(hr.flatten())
         rnn_output_seq = torch.stack(hr_per_clip, dim=0).permute(1, 0)
-        return regression_output, rnn_output_seq
+        return (regression_output, rnn_output_seq)
 
 
 if __name__ == "__main__":

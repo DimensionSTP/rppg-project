@@ -1,5 +1,5 @@
 import os
-import glob
+from typing import Tuple, List
 
 from tqdm import tqdm
 import cv2
@@ -10,7 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
 # Chunks the ROI into blocks of size 5x5
-def chunkify(img, block_width=5, block_height=5):
+def chunkify(img, block_width: int = 5, block_height: int = 5,) -> List[np.ndarray]:
     shape = img.shape
     x_len = shape[1] // block_width
     y_len = shape[0] // block_height
@@ -31,7 +31,7 @@ def chunkify(img, block_width=5, block_height=5):
 
 
 # Function to read the the video data as an array of frames and additionally return metadata like FPS, Dims etc.
-def get_frames_and_video_meta_data(video_path, meta_data_only=False):
+def get_frames_and_video_meta_data(video_path: str, meta_data_only: bool = False,) -> Tuple[np.ndarray, float, int]:
     cap = cv2.VideoCapture(video_path)
     frame_rate = cap.get(5)  # frame rate
 
@@ -64,11 +64,11 @@ def get_frames_and_video_meta_data(video_path, meta_data_only=False):
                 break
 
     cap.release()
-    return frames, frame_rate, sliding_window_stride
+    return (frames, frame_rate, sliding_window_stride)
 
 
 # Optimized function for converting videos to Spatio-temporal maps
-def preprocess_video_to_st_maps(video_path):
+def preprocess_video_to_st_maps(video_path: str,) -> Tuple[np.ndarray, int, List[int]]:
     frames, frame_rate, sliding_window_stride = get_frames_and_video_meta_data(
         video_path
     )
@@ -218,7 +218,7 @@ def preprocess_video_to_st_maps(video_path):
         map_index += 1
 
     # return stacked_maps, clip_size
-    return stacked_maps, clip_size, stacked_coordinates
+    return (stacked_maps, clip_size, stacked_coordinates)
 
 
 if __name__ == "__main__":

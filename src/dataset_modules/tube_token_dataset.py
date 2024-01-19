@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -15,7 +16,7 @@ class VIPLDataset(Dataset):
         preprocessed_dataset: str,
         data_path: str,
         transform: torch,
-    ):
+    ) -> None:
         super().__init__()
         self.clip_frame_size = clip_frame_size
         self.preprocessed_dataset = pd.read_csv(
@@ -24,10 +25,10 @@ class VIPLDataset(Dataset):
         self.data_path = data_path
         self.transform = transform
 
-    def __len__(self):
+    def __len__(self) -> int:
         pass
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int,) -> Tuple[np.ndarray, float, float, np.ndarray]:
         video_path = os.path.join(
             self.root_dir, str(self.preprocessed_dataset.iloc[idx, 0])
         )
@@ -37,9 +38,9 @@ class VIPLDataset(Dataset):
         frame_rate = self.preprocessed_dataset.iloc[idx, 2]
         avg_hr = self.preprocessed_dataset.iloc[idx, 3]
         ecg_label = self.preprocessed_dataset.iloc[idx, 5 : 5 + 160].values
-        return tube_token, frame_rate, avg_hr, ecg_label
+        return (tube_token, frame_rate, avg_hr, ecg_label)
 
-    def get_single_tube_token(self, video_path: str, start_frame: int):
+    def get_single_tube_token(self, video_path: str, start_frame: int,) -> np.ndarray:
         tube_token = np.zeros(self.clip_frame_size, 128, 128, 3)
         crop_range = np.random.randint(16)
 
