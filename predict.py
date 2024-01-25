@@ -6,7 +6,7 @@ from pytorch_lightning.utilities.distributed import rank_zero_info
 from src.pipeline.pipeline import predict
 
 
-@hydra.main(config_path="configs/", config_name="customized_basic_rhythm_predict.yaml")
+@hydra.main(config_path="configs/", config_name="custom_rhythm_rhythm_predict.yaml")
 def main(config):
     rank_zero_info(OmegaConf.to_yaml(config))
     return predict(config)
