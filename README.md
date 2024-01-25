@@ -21,6 +21,13 @@ conda activate myenv
 pip install -r requirements.txt
 ```
 
+### Model Hyper-Parameters Tuning
+
+* end-to-end
+```shell
+python tune.py
+```
+
 ### Training
 
 * end-to-end
