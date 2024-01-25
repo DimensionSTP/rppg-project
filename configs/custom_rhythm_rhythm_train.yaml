@@ -26,6 +26,12 @@ rnn_num_layers: 1
 direction: bi
 
 lr: 0.0001
+t_max: 50
+eta_min: 0.000025
+
+is_tuned: True
+num_trials: 3
+tuned_hparams_path: ${project_dir}/hparams/${dataset_name}-${project_name}/${num_trials}_trials/best_params.json
 
 dataset_name: Custom
 project_name: CustomizedRhythmNet

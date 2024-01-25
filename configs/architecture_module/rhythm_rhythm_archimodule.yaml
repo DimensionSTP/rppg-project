@@ -9,7 +9,7 @@ model:
   direction: ${direction}
 
 lr: ${lr}
-t_max: 50
-eta_min: 0.000025
+t_max: ${t_max}
+eta_min: ${eta_min}
 interval: step
 project_dir: ${project_dir}

@@ -1,5 +1,7 @@
+import json
+
 import hydra
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 
 from pytorch_lightning.utilities.distributed import rank_zero_info
 
@@ -7,7 +9,10 @@ from src.pipeline.pipeline import predict
 
 
 @hydra.main(config_path="configs/", config_name="custom_rhythm_rhythm_predict.yaml")
-def main(config):
+def main(config: DictConfig,) -> None:
+    if config.is_tuned:
+        params = json.load(open(config.tuned_hparams_path, "rt", encoding="UTF-8"))
+        config = OmegaConf.merge(config, params)
     rank_zero_info(OmegaConf.to_yaml(config))
     return predict(config)
 
