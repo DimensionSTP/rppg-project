@@ -1,0 +1,47 @@
+_target_: src.tuner_modules.rhythm_tunermodule.RhythmTunerModule
+hparams:
+  backbone:
+    - resnet18
+    - resnet50
+    - regnetx_064
+    - regnety_064
+    - resnest50d
+    - resnext50d_32x4d
+  backbone_pretrained:
+    - True
+    - False
+  rnn_type:
+    - gru
+    - lstm
+  rnn_num_layers:
+    low: 1
+    high: 5
+    log: False
+  direction:
+    - bi
+    - uni
+  lr:
+    low: 0.00005
+    high: 0.0005
+    log: False
+  t_max:
+    low: 25
+    high: 100
+    log: False
+  eta_min:
+    low: 0.00005
+    high: 0.00001
+    log: False
+
+module_params:
+  interval: step
+  project_dir: ${project_dir}
+  accelerator: gpu
+  log_steps: 10
+  precision: 32
+  max_epochs: ${epoch}
+
+num_trials: ${num_trials}
+seed: ${seed}
+model_name: ${model_name}
+save_path: ${save_path}
