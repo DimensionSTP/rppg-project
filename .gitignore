@@ -4,6 +4,7 @@
 *.npy
 *.txt
 *.xml
+*.json
 *__pycache__
 logs/runs/
 logs/wandb/
