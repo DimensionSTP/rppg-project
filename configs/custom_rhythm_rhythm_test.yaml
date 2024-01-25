@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
   - dataset_module: stmap_custom_dataset
-  - architecture_module: basic_rhythm_archimodule
+  - architecture_module: rhythm_rhythm_archimodule
   - logger: wandb
   - hydra: hydra
   - callbacks: callbacks
@@ -27,8 +27,9 @@ direction: bi
 
 lr: 0.0001
 
+dataset_name: Custom
 project_name: CustomizedRhythmNet
-model_name: ${project_name}-${backbone}-${rnn_type}${rnn_num_layers}-${direction}
+model_name: ${dataset_name}-${project_name}-${backbone}-${rnn_type}${rnn_num_layers}-${direction}
 
 ckpt_folder: ${callbacks.model_checkpoint.dirpath}
 ckpt_path: ${ckpt_folder}${model_name}-bs${batch_size}-epoch${epoch}.ckpt
