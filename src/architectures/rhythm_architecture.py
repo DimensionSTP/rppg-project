@@ -10,7 +10,7 @@ from torch.nn import functional as F
 from pytorch_lightning import LightningModule
 
 
-class RbpmPlModule(LightningModule):
+class RythmArchitecture(LightningModule):
     def __init__(
         self,
         model: nn.Module,

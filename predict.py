@@ -5,10 +5,10 @@ from omegaconf import OmegaConf, DictConfig
 
 from pytorch_lightning.utilities.distributed import rank_zero_info
 
-from src.pipeline.pipeline import predict
+from src.pipelines.pipeline import predict
 
 
-@hydra.main(config_path="configs/", config_name="custom_rhythm_rhythm_predict.yaml")
+@hydra.main(config_path="configs/", config_name="rhythm_predict.yaml")
 def main(config: DictConfig,) -> None:
     if config.is_tuned:
         params = json.load(open(config.tuned_hparams_path, "rt", encoding="UTF-8"))

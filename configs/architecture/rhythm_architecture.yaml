@@ -1,7 +1,7 @@
-_target_: src.architecture_modules.rhythm_archimodule.RbpmPlModule
+_target_: src.architectures.rhythm_architecture.RythmArchitecture
 
 model:
-  _target_: src.architecture_modules.models.customized_rhythmnet.CustomizedRhythmNet
+  _target_: src.architectures.models.customized_rhythmnet.CustomizedRhythmNet
   backbone: ${backbone}
   backbone_pretrained: ${backbone_pretrained}
   rnn_type: ${rnn_type}

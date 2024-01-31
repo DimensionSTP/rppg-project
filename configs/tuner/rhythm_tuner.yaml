@@ -1,4 +1,4 @@
-_target_: src.tuner_modules.rhythm_tunermodule.RhythmTunerModule
+_target_: src.tuners.rhythm_tuner.RhythmTuner
 hparams:
   backbone:
     - resnet18

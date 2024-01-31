@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 import json
 import warnings
 warnings.filterwarnings("ignore")
@@ -13,11 +13,11 @@ from optuna.integration import PyTorchLightningPruningCallback
 from optuna.samplers import TPESampler
 from optuna.pruners import HyperbandPruner
 
-from ..architecture_modules.rhythm_archimodule import RbpmPlModule
-from ..architecture_modules.models.customized_rhythmnet import CustomizedRhythmNet
+from ..architectures.rhythm_architecture import RythmArchitecture
+from ..architectures.models.customized_rhythmnet import CustomizedRhythmNet
 
 
-class RhythmTunerModule():
+class RhythmTuner():
     def __init__(
         self,
         hparams: Dict[str, Any],
@@ -38,7 +38,7 @@ class RhythmTunerModule():
         self.seed = seed
 
     def __call__(self) -> None:
-        study=optuna.create_study(direction="maximize", sampler=TPESampler(seed=self.seed), pruner=HyperbandPruner())
+        study=optuna.create_study(direction="minimize", sampler=TPESampler(seed=self.seed), pruner=HyperbandPruner())
         study.optimize(self.optuna_objective, n_trials=self.num_trials)
         trial = study.best_trial
         best_score = trial.value
@@ -116,7 +116,7 @@ class RhythmTunerModule():
             rnn_num_layers=params["rnn_num_layers"],
             direction=params["direction"],
         )
-        architecture_module = RbpmPlModule(
+        architecture_module = RythmArchitecture(
             model=model,
             lr=params["lr"],
             t_max=params["t_max"],

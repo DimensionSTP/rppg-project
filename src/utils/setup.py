@@ -19,7 +19,7 @@ class SetUp:
 
     def get_train_loader(self) -> DataLoader:
         train_dataset: Dataset = instantiate(
-            self.config.dataset_module, split=self.train_split
+            self.config.dataset, split=self.train_split
         )
         return DataLoader(
             dataset=train_dataset,
@@ -30,7 +30,7 @@ class SetUp:
 
     def get_val_loader(self) -> DataLoader:
         val_dataset: Dataset = instantiate(
-            self.config.dataset_module, split=self.val_split
+            self.config.dataset, split=self.val_split
         )
         return DataLoader(
             dataset=val_dataset,
@@ -41,7 +41,7 @@ class SetUp:
 
     def get_test_loader(self) -> DataLoader:
         test_dataset: Dataset = instantiate(
-            self.config.dataset_module, split=self.test_split
+            self.config.dataset, split=self.test_split
         )
         return DataLoader(
             dataset=test_dataset,
@@ -50,15 +50,15 @@ class SetUp:
             pin_memory=True,
         )
 
-    def get_dataset_module(self) -> LightningDataModule:
-        dataset_module: LightningDataModule = instantiate(self.config.dataset_module)
-        return dataset_module
+    def get_dataset(self) -> LightningDataModule:
+        dataset: LightningDataModule = instantiate(self.config.dataset)
+        return dataset
 
-    def get_architecture_module(self) -> LightningModule:
-        architecture_module: LightningModule = instantiate(
-            self.config.architecture_module
+    def get_architecture(self) -> LightningModule:
+        architecture: LightningModule = instantiate(
+            self.config.architecture
         )
-        return architecture_module
+        return architecture
 
     def get_callbacks(self) -> List[Any]:
         model_checkpotint: ModelCheckpoint = instantiate(

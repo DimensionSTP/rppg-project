@@ -5,10 +5,6 @@ from torch import nn
 
 import timm
 
-"""
-Backbone CNN for RhythmNet model is a RestNet-18
-"""
-
 
 class CustomizedRhythmNet(nn.Module):
     def __init__(
@@ -85,14 +81,3 @@ class CustomizedRhythmNet(nn.Module):
             hr_per_clip.append(hr.flatten())
         rnn_output_seq = torch.stack(hr_per_clip, dim=0).permute(1, 0)
         return (regression_output, rnn_output_seq)
-
-
-if __name__ == "__main__":
-    model = CustomizedRhythmNet("seresnext26d_32x4d", False, "gru", 10, "bi")
-    img = torch.rand(4, 10, 3, 300, 25) * 255
-    reg_out, rnn_out = model(img)
-    reg_out = reg_out.detach().numpy()
-    rnn_out = rnn_out.detach().numpy()
-    print("reg_out: ", reg_out.shape)
-    print("rnn_out: ", rnn_out.shape)
-    print("successfully finished")
