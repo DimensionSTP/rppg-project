@@ -50,5 +50,7 @@ python main.py mode=predict is_tuned={bool} epoch={ckpt epoch}
 ```
 
 __If you want to change main config, use --config-name={config_name}.__
+
 __Also, you can use --multirun option.__
+
 __You can set additional arguments through the command line.__
