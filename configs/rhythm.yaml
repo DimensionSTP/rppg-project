@@ -1,0 +1,49 @@
+# @package _global_
+defaults:
+  - dataset: stmap_custom_dataset
+  - architecture: rhythm_architecture
+  - tuner: rhythm_tuner
+  - logger: wandb
+  - hydra: hydra
+  - callbacks: callbacks
+  - trainer: trainer
+
+project_dir: /home/ddang/rppg-project
+save_load_dir: /data
+
+seed: 2024
+
+split:
+  train: train
+  val: val
+  test: test
+
+batch_size: 128
+
+backbone: resnet50
+backbone_pretrained: False
+rnn_type: gru
+rnn_num_layers: 1
+direction: bi
+
+lr: 0.0001
+t_max: 50
+eta_min: 0.000025
+
+epoch: 100
+
+model_name: CustomizedRhythmNet
+dataset_name: Custom
+
+is_tuned: True
+num_trials: 3
+hparams_save_path: ${project_dir}/hparams/${model_name}/${dataset_name}/${num_trials}_trials
+tuned_hparams_path: ${hparams_save_path}/best_params.json
+
+project_name: ${model_name}-${dataset_name}
+save_detail: backbone${backbone}-rnn_type${rnn_type}-rnn_num_layers${rnn_num_layers}-direction${direction}-bs${batch_size}
+ckpt_path: ${callbacks.model_checkpoint.dirpath}/${callbacks.model_checkpoint.filename}.ckpt
+
+mode: train
+run_name: ${project_name}-${mode}
+work_dir: ${hydra:runtime.cwd}
