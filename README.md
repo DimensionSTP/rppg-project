@@ -4,7 +4,7 @@
 
 ### Dataset
 VIPL-HR-V1
-Pesonal
+Personal
 
 ### Quick setup
 
