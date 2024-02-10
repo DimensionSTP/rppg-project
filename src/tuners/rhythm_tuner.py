@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any
 import json
 import warnings
 warnings.filterwarnings("ignore")
@@ -133,7 +133,7 @@ class RhythmTuner():
         trainer = Trainer(
             devices=1,
             accelerator=self.module_params.accelerator,
-            log_every_n_steps=self.module_params.log_steps,
+            log_every_n_steps=self.module_params.log_every_n_steps,
             precision=self.module_params.precision,
             max_epochs=self.module_params.max_epochs,
             enable_checkpointing=False,
