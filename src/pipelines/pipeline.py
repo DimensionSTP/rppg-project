@@ -7,7 +7,9 @@ from ..utils.setup import SetUp
 from ..tuners.rhythm_tuner import RhythmTuner
 
 
-def train(config: DictConfig,) -> None:
+def train(
+    config: DictConfig,
+) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)
@@ -31,6 +33,9 @@ def train(config: DictConfig,) -> None:
     logged_hparams["batch_size"] = config.batch_size
     logged_hparams["epoch"] = config.epoch
     logged_hparams["seed"] = config.seed
+    for key, value in config.trainer.items():
+        if key != "_target_":
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
     trainer: Trainer = instantiate(
@@ -50,13 +55,16 @@ def train(config: DictConfig,) -> None:
         )
     except Exception as e:
         logger.experiment.alert(
-            title="Training Error", 
-            text="An error occurred during training", 
+            title="Training Error",
+            text="An error occurred during training",
             level="ERROR",
         )
         raise e
 
-def test(config: DictConfig,) -> None:
+
+def test(
+    config: DictConfig,
+) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)
@@ -79,6 +87,9 @@ def test(config: DictConfig,) -> None:
     logged_hparams["batch_size"] = config.batch_size
     logged_hparams["epoch"] = config.epoch
     logged_hparams["seed"] = config.seed
+    for key, value in config.trainer.items():
+        if key != "_target_":
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
     trainer: Trainer = instantiate(
@@ -87,8 +98,8 @@ def test(config: DictConfig,) -> None:
 
     try:
         trainer.test(
-            model=architecture, 
-            dataloaders=test_loader, 
+            model=architecture,
+            dataloaders=test_loader,
             ckpt_path=config.ckpt_path,
         )
         logger.experiment.alert(
@@ -98,13 +109,16 @@ def test(config: DictConfig,) -> None:
         )
     except Exception as e:
         logger.experiment.alert(
-            title="Testing Error", 
-            text="An error occurred during testing", 
+            title="Testing Error",
+            text="An error occurred during testing",
             level="ERROR",
         )
         raise e
 
-def predict(config: DictConfig,) -> None:
+
+def predict(
+    config: DictConfig,
+) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)
@@ -127,6 +141,9 @@ def predict(config: DictConfig,) -> None:
     logged_hparams["batch_size"] = config.batch_size
     logged_hparams["epoch"] = config.epoch
     logged_hparams["seed"] = config.seed
+    for key, value in config.trainer.items():
+        if key != "_target_":
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
     trainer: Trainer = instantiate(
@@ -135,8 +152,8 @@ def predict(config: DictConfig,) -> None:
 
     try:
         trainer.predict(
-            model=architecture, 
-            dataloaders=predict_loader, 
+            model=architecture,
+            dataloaders=predict_loader,
             ckpt_path=config.ckpt_path,
         )
         logger.experiment.alert(
@@ -146,13 +163,16 @@ def predict(config: DictConfig,) -> None:
         )
     except Exception as e:
         logger.experiment.alert(
-            title="Prediction Error", 
-            text="An error occurred during prediction", 
+            title="Prediction Error",
+            text="An error occurred during prediction",
             level="ERROR",
         )
         raise e
 
-def tune(config: DictConfig,) -> None:
+
+def tune(
+    config: DictConfig,
+) -> None:
 
     if "seed" in config:
         seed_everything(config.seed)
