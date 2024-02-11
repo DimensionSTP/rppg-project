@@ -56,7 +56,10 @@ class CustomizedRhythmNet(nn.Module):
                 bidirectional=self.bidirectional,
             )
 
-    def forward(self, st_maps:torch.Tensor,) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self,
+        st_maps: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         batched_output_per_clip = []
         rnn_input_per_clip = []
         hr_per_clip = []

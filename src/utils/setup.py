@@ -11,7 +11,10 @@ from pytorch_lightning.loggers import WandbLogger
 
 
 class SetUp:
-    def __init__(self, config: DictConfig,) -> None:
+    def __init__(
+        self,
+        config: DictConfig,
+    ) -> None:
         self.config = config
         self.train_split = config.split.train
         self.val_split = config.split.val
@@ -29,9 +32,7 @@ class SetUp:
         )
 
     def get_val_loader(self) -> DataLoader:
-        val_dataset: Dataset = instantiate(
-            self.config.dataset, split=self.val_split
-        )
+        val_dataset: Dataset = instantiate(self.config.dataset, split=self.val_split)
         return DataLoader(
             dataset=val_dataset,
             batch_size=self.config.batch_size,
@@ -40,9 +41,7 @@ class SetUp:
         )
 
     def get_test_loader(self) -> DataLoader:
-        test_dataset: Dataset = instantiate(
-            self.config.dataset, split=self.test_split
-        )
+        test_dataset: Dataset = instantiate(self.config.dataset, split=self.test_split)
         return DataLoader(
             dataset=test_dataset,
             batch_size=self.config.batch_size,
@@ -55,9 +54,7 @@ class SetUp:
         return dataset
 
     def get_architecture(self) -> LightningModule:
-        architecture: LightningModule = instantiate(
-            self.config.architecture
-        )
+        architecture: LightningModule = instantiate(self.config.architecture)
         return architecture
 
     def get_callbacks(self) -> List[Any]:

@@ -8,11 +8,18 @@ from .stmap_dataset import CustomDataset
 
 
 class CustomDataModule(LightningDataModule):
-    def __init__(self, data_path: str, batch_size: int,) -> None:
+    def __init__(
+        self,
+        data_path: str,
+        batch_size: int,
+    ) -> None:
         super().__init__()
         self.save_hyperparameters(logger=False)
 
-    def setup(self, stage: Optional[str] = None,) -> None:
+    def setup(
+        self,
+        stage: Optional[str] = None,
+    ) -> None:
         if stage == "fit" or stage is None:
             self.train = CustomDataset(data_path=self.hparams.data_path, split="train")
             self.val = CustomDataset(data_path=self.hparams.data_path, split="val")

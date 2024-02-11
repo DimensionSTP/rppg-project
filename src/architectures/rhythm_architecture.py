@@ -28,11 +28,17 @@ class RythmArchitecture(LightningModule):
         self.interval = interval
         self.project_dir = project_dir
 
-    def forward(self, stmap: torch.Tensor,) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self,
+        stmap: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         _, output = self.model(stmap)
         return output
 
-    def step(self, batch: torch.Tensor,) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def step(
+        self,
+        batch: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         stmap, label = batch
         pred = self(stmap)
         loss = F.mse_loss(pred, label)
@@ -49,7 +55,11 @@ class RythmArchitecture(LightningModule):
             "lr_scheduler": {"scheduler": cosine_scheduler, "interval": self.interval},
         }
 
-    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int,) -> torch.Tensor:
+    def training_step(
+        self,
+        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch_idx: int,
+    ) -> torch.Tensor:
         loss, pred, label, visual_loss = self.step(batch)
         self.log(
             "train_rmse_loss",
@@ -69,7 +79,11 @@ class RythmArchitecture(LightningModule):
         )
         return loss
 
-    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int,) -> torch.Tensor:
+    def validation_step(
+        self,
+        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch_idx: int,
+    ) -> torch.Tensor:
         loss, pred, label, visual_loss = self.step(batch)
         self.log(
             "val_rmse_loss",
@@ -89,7 +103,11 @@ class RythmArchitecture(LightningModule):
         )
         return loss
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int,) -> torch.Tensor:
+    def test_step(
+        self,
+        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch_idx: int,
+    ) -> torch.Tensor:
         loss, pred, label, visual_loss = self.step(batch)
         self.log(
             "test_rmse_loss",
@@ -109,7 +127,11 @@ class RythmArchitecture(LightningModule):
         )
         return loss
 
-    def predict_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int,) -> None:
+    def predict_step(
+        self,
+        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch_idx: int,
+    ) -> None:
         loss, pred, label, visual_loss = self.step(batch)
         pred = pred.view(-1)
         label = label.view(-1)
@@ -119,11 +141,18 @@ class RythmArchitecture(LightningModule):
         df = pd.DataFrame(table)
         df.to_csv(f"{self.project_dir}/records/{batch_idx}.csv", index=False)
 
-    def train_epoch_end(self, train_step_outputs: torch.Tensor,) -> None:
+    def train_epoch_end(
+        self,
+        train_step_outputs: torch.Tensor,
+    ) -> None:
         pass
 
-    def validation_epoch_end(self, validation_step_outputs: torch.Tensor,) -> None:
+    def validation_epoch_end(
+        self,
+        validation_step_outputs: torch.Tensor,
+    ) -> None:
         pass
 
-    def test_epoch_end(self, test_step_outputs: torch.Tensor,) -> None:
-        pass
+    def test_epoch_end(
+        self,
+        test_step_outputs: t

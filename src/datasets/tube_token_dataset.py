@@ -28,7 +28,10 @@ class VIPLDataset(Dataset):
     def __len__(self) -> int:
         pass
 
-    def __getitem__(self, idx: int,) -> Tuple[np.ndarray, float, float, np.ndarray]:
+    def __getitem__(
+        self,
+        idx: int,
+    ) -> Tuple[np.ndarray, float, float, np.ndarray]:
         video_path = os.path.join(
             self.root_dir, str(self.preprocessed_dataset.iloc[idx, 0])
         )
@@ -40,7 +43,11 @@ class VIPLDataset(Dataset):
         ecg_label = self.preprocessed_dataset.iloc[idx, 5 : 5 + 160].values
         return (tube_token, frame_rate, avg_hr, ecg_label)
 
-    def get_single_tube_token(self, video_path: str, start_frame: int,) -> np.ndarray:
+    def get_single_tube_token(
+        self,
+        video_path: str,
+        start_frame: int,
+    ) -> np.ndarray:
         tube_token = np.zeros(self.clip_frame_size, 128, 128, 3)
         crop_range = np.random.randint(16)
 
