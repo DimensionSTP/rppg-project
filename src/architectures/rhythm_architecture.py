@@ -7,7 +7,7 @@ import torch
 from torch import nn, optim
 from torch.nn import functional as F
 
-from pytorch_lightning import LightningModule
+from lightning.pytorch import LightningModule
 
 
 class RythmArchitecture(LightningModule):

@@ -1,7 +1,7 @@
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
-from pytorch_lightning import Trainer, seed_everything
+from lightning.pytorch import Trainer, seed_everything
 
 from ..utils.setup import SetUp
 from ..tuners.rhythm_tuner import RhythmTuner
