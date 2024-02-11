@@ -7,7 +7,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from pytorch_lightning import LightningDataModule, LightningModule
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.loggers.wandb import WandbLogger
 
 
 class SetUp:
