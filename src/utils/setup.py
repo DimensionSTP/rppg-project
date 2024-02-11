@@ -5,9 +5,9 @@ from hydra.utils import instantiate
 
 from torch.utils.data import Dataset, DataLoader
 
-from pytorch_lightning import LightningDataModule, LightningModule
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
-from pytorch_lightning.loggers import WandbLogger
+from lightning.pytorch import LightningDataModule, LightningModule
+from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
+from lightning.pytorch.loggers.wandb import WandbLogger
 
 
 class SetUp:

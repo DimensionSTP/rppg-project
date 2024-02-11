@@ -7,7 +7,7 @@ import torch
 from torch import nn, optim
 from torch.nn import functional as F
 
-from pytorch_lightning import LightningModule
+from lightning.pytorch import LightningModule
 
 
 class RythmArchitecture(LightningModule):
@@ -155,4 +155,6 @@ class RythmArchitecture(LightningModule):
 
     def test_epoch_end(
         self,
-        test_step_outputs: t
+        test_step_outputs: torch.Tensor,
+    ) -> None:
+        pass
