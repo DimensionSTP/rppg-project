@@ -14,6 +14,7 @@ import ssl
 
 ssl._create_default_https_context = ssl._create_stdlib_context
 
+
 # Chunks the ROI into blocks of size 5x5
 def chunkify(img, block_width=5, block_height=5):
     shape = img.shape
