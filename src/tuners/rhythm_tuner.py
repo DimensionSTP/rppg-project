@@ -2,12 +2,13 @@ import os
 from typing import Dict, Any
 import json
 import warnings
+
 warnings.filterwarnings("ignore")
 
 from torch.utils.data import DataLoader
 
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.loggers.wandb import WandbLogger
 
 import optuna
 from optuna.integration import PyTorchLightningPruningCallback
@@ -18,7 +19,7 @@ from ..architectures.rhythm_architecture import RythmArchitecture
 from ..architectures.models.customized_rhythmnet import CustomizedRhythmNet
 
 
-class RhythmTuner():
+class RhythmTuner:
     def __init__(
         self,
         hparams: Dict[str, Any],
@@ -28,7 +29,7 @@ class RhythmTuner():
         hparams_save_path: str,
         train_loader: DataLoader,
         val_loader: DataLoader,
-        logger:  WandbLogger,
+        logger: WandbLogger,
     ) -> None:
         self.hparams = hparams
         self.module_params = module_params
@@ -40,7 +41,11 @@ class RhythmTuner():
         self.logger = logger
 
     def __call__(self) -> None:
-        study=optuna.create_study(direction="minimize", sampler=TPESampler(seed=self.seed), pruner=HyperbandPruner())
+        study = optuna.create_study(
+            direction="minimize",
+            sampler=TPESampler(seed=self.seed),
+            pruner=HyperbandPruner(),
+        )
         study.optimize(self.optuna_objective, n_trials=self.num_trials)
         trial = study.best_trial
         best_score = trial.value
@@ -59,7 +64,7 @@ class RhythmTuner():
         trial: optuna.trial.Trial,
     ) -> float:
         seed_everything(self.seed)
-        
+
         params = dict()
         params["seed"] = self.seed
         if self.hparams.backbone:
@@ -127,7 +132,9 @@ class RhythmTuner():
             project_dir=self.module_params.project_dir,
         )
 
-        pruning_callback = PyTorchLightningPruningCallback(trial, monitor="val_rmse_loss")
+        pruning_callback = PyTorchLightningPruningCallback(
+            trial, monitor="val_rmse_loss"
+        )
         self.logger.log_hyperparams(params)
 
         trainer = Trainer(
@@ -154,8 +161,8 @@ class RhythmTuner():
             )
         except Exception as e:
             self.logger.experiment.alert(
-                title="Tuning Error", 
-                text="An error occurred during tuning", 
+                title="Tuning Error",
+                text="An error occurred during tuning",
                 level="ERROR",
             )
             raise e
