@@ -155,4 +155,6 @@ class RythmArchitecture(LightningModule):
 
     def test_epoch_end(
         self,
-        test_step_outputs: t
+        test_step_outputs: torch.Tensor,
+    ) -> None:
+        pass
