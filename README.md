@@ -14,7 +14,7 @@ git clone https://github.com/DimensionSTP/rppg-project.git
 cd rppg-project
 
 # [OPTIONAL] create conda environment
-conda create -n myenv python=3.7
+conda create -n myenv python=3.8
 conda activate myenv
 
 # install requirements
