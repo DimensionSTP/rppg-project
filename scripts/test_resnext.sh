@@ -4,6 +4,6 @@ for model in $model_list
 do
     for ((epoch = 4; epoch <= 14; epoch++))
     do
-        python test.py backbone=$model epoch=$epoch
+        python main.py mode=test is_tuned=untuned backbone=$model epoch=$epoch
     done
 done
