@@ -4,11 +4,11 @@ for model in $model_list
 do
     for ((epoch = 5; epoch <= 15; epoch++))
     do
-        python test.py backbone=$model batch_size=64 epoch=$epoch
+        python main.py mode=test is_tuned=untuned backbone=$model batch_size=64 epoch=$epoch
     done
 done
 
 for epoch in "9 12 15"
 do
-    python test.py backbone=regnetx_320 batch_size=32 epoch=$epoch
+    python main.py mode=test is_tuned=untuned backbone=regnetx_320 batch_size=32 epoch=$epoch
 done

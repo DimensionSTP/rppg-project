@@ -33,7 +33,10 @@ class CustomDataset(Dataset):
             dtype=torch.float32,
         )
         label_df = pd.read_csv(self.data_list[idx])
-        label = torch.tensor(list(label_df["BPM"]), dtype=torch.float32)
+        label = torch.tensor(
+            list(label_df["BPM"]),
+            dtype=torch.float32,
+        )
         return (stmap, label)
 
     @staticmethod

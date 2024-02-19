@@ -8,8 +8,9 @@ defaults:
   - callbacks: callbacks
   - trainer: trainer
 
-project_dir: /home/ddang/rppg-project
-save_load_dir: /data
+package_name: rppg-project
+project_dir: /home/ddang/${package_name}
+connected_dir: /data/${package_name}
 
 seed: 2024
 
@@ -30,20 +31,31 @@ lr: 0.0001
 t_max: 50
 eta_min: 0.000025
 
+monitor: val_rmse_loss
+tracking_direction: min
+patience: 3
+min_delta: 0
+
+devices: -1
+accelerator: gpu
+strategy: ddp
+log_every_n_steps: 10
+precision: 32
 epoch: 100
 
 model_name: CustomizedRhythmNet
 dataset_name: Custom
+mode: train
 
-is_tuned: True
+is_tuned: tuned
 num_trials: 3
-hparams_save_path: ${project_dir}/hparams/${model_name}/${dataset_name}/${num_trials}_trials
+hparams_save_path: ${connected_dir}/hparams/${model_name}/${dataset_name}/${num_trials}_trials
 tuned_hparams_path: ${hparams_save_path}/best_params.json
 
-project_name: ${model_name}-${dataset_name}
+project_name: ${model_name}-${dataset_name}-${mode}
 save_detail: backbone${backbone}-rnn_type${rnn_type}-rnn_num_layers${rnn_num_layers}-direction${direction}-bs${batch_size}
-ckpt_path: ${callbacks.model_checkpoint.dirpath}/${save_detail}-epoch${epoch}.ckpt
+resumed_step: 0
+ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch${epoch}.ckpt
 
-mode: train
 run_name: ${project_name}-${mode}
 work_dir: ${hydra:runtime.cwd}

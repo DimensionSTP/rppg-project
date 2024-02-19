@@ -4,7 +4,7 @@ for model in $model_list0
 do
     for ((epoch = 9; epoch <= 16; epoch++))
     do
-        python test.py backbone=$model epoch=$epoch
+        python main.py mode=test is_tuned=untuned backbone=$model epoch=$epoch
     done
 done
 
@@ -14,7 +14,7 @@ for model in $model_list1
 do
     for ((epoch = 5; epoch <= 11; epoch++))
     do
-        python test.py backbone=$model batch_size=64 epoch=$epoch
+        python main.py mode=test is_tuned=untuned backbone=$model batch_size=64 epoch=$epoch
     done
 done
 
@@ -24,6 +24,6 @@ for model in $model_list2
 do
     for ((epoch = 3; epoch <= 9; epoch++))
     do
-        python test.py backbone=$model batch_size=32 epoch=$epoch
+        python main.py mode=test is_tuned=untuned backbone=$model batch_size=32 epoch=$epoch
     done
 done
