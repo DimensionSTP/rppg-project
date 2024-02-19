@@ -1,3 +1,4 @@
+import os
 import math
 from typing import Tuple, Dict, Any
 
@@ -9,24 +10,28 @@ from torch.nn import functional as F
 
 from lightning.pytorch import LightningModule
 
+from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
+
 
 class RythmArchitecture(LightningModule):
     def __init__(
         self,
         model: nn.Module,
+        strategy: str,
         lr: float,
         t_max: int,
         eta_min: float,
         interval: str,
-        project_dir: str,
+        connected_dir: str,
     ) -> None:
         super().__init__()
         self.model = model
+        self.strategy = strategy
         self.lr = lr
         self.t_max = t_max
         self.eta_min = eta_min
         self.interval = interval
-        self.project_dir = project_dir
+        self.connected_dir = connected_dir
 
     def forward(
         self,
@@ -46,13 +51,21 @@ class RythmArchitecture(LightningModule):
         return (loss, pred, label, visual_loss)
 
     def configure_optimizers(self) -> Dict[str, Any]:
-        adam_w_optimizer = optim.AdamW(self.parameters(), lr=self.lr)
-        cosine_scheduler = optim.lr_scheduler.CosineAnnealingLR(
-            adam_w_optimizer, T_max=self.t_max, eta_min=self.eta_min
+        if self.strategy == "deepspeed_stage_3":
+            optimizer = FusedAdam(self.parameters(), lr=self.lr)
+        elif (
+            self.strategy == "deepspeed_stage_2_offload"
+            or self.strategy == "deepspeed_stage_3_offload"
+        ):
+            optimizer = DeepSpeedCPUAdam(self.parameters(), lr=self.lr)
+        else:
+            optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=self.t_max, eta_min=self.eta_min
         )
         return {
-            "optimizer": adam_w_optimizer,
-            "lr_scheduler": {"scheduler": cosine_scheduler, "interval": self.interval},
+            "optimizer": optimizer,
+            "lr_scheduler": {"scheduler": scheduler, "interval": self.interval},
         }
 
     def training_step(
@@ -139,7 +152,9 @@ class RythmArchitecture(LightningModule):
         label = label.tolist()
         table = {"pred": pred, "label": label}
         df = pd.DataFrame(table)
-        df.to_csv(f"{self.project_dir}/records/{batch_idx}.csv", index=False)
+        if not os.path.exists(f"{self.connected_dir}/records"):
+            os.makedirs(f"{self.connected_dir}/records")
+        df.to_csv(f"{self.connected_dir}/records/{batch_idx}.csv", index=False)
 
     def train_epoch_end(
         self,

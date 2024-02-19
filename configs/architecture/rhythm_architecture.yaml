@@ -8,8 +8,9 @@ model:
   rnn_num_layers: ${rnn_num_layers}
   direction: ${direction}
 
+strategy: ${strategy}
 lr: ${lr}
 t_max: ${t_max}
 eta_min: ${eta_min}
 interval: step
-project_dir: ${project_dir}
+connected_dir: ${connected_dir}
