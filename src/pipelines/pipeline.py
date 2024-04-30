@@ -1,5 +1,9 @@
 import os
 
+import numpy as np
+import pandas as pd
+import torch
+
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
@@ -39,6 +43,9 @@ def train(
     logged_hparams["seed"] = config.seed
     for key, value in config.trainer.items():
         if key != "_target_":
+            logged_hparams[key] = value
+    for key, value in config.dataset.items():
+        if key not in ["_target_", "data_path", "split", "seed"]:
             logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
@@ -123,6 +130,9 @@ def test(
     for key, value in config.trainer.items():
         if key != "_target_":
             logged_hparams[key] = value
+    for key, value in config.dataset.items():
+        if key not in ["_target_", "data_path", "split", "seed"]:
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
     if (
@@ -201,55 +211,72 @@ def predict(
     for key, value in config.trainer.items():
         if key != "_target_":
             logged_hparams[key] = value
+    for key, value in config.dataset.items():
+        if key not in ["_target_", "data_path", "split", "seed"]:
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
-    if (
-        config.strategy == "deepspeed_stage_3"
-        or config.strategy == "deepspeed_stage_3_offload"
-    ):
-        trainer: Trainer = instantiate(
-            config.trainer,
-            strategy="ddp",
-            callbacks=callbacks,
-            logger=logger,
-            _convert_="partial",
-        )
-    else:
-        trainer: Trainer = instantiate(
-            config.trainer,
-            callbacks=callbacks,
-            logger=logger,
-            _convert_="partial",
-        )
+    trainer: Trainer = instantiate(
+        config.trainer,
+        devices=1,
+        strategy="auto",
+        callbacks=callbacks,
+        logger=logger,
+        _convert_="partial",
+    )
 
     try:
         if (
             config.strategy == "deepspeed_stage_3"
             or config.strategy == "deepspeed_stage_3_offload"
         ):
-            trainer.predict(
+            logits = trainer.predict(
                 model=architecture,
                 dataloaders=predict_loader,
                 ckpt_path=f"{config.ckpt_path}/model.pt",
             )
         else:
-            trainer.predict(
+            logits = trainer.predict(
                 model=architecture,
                 dataloaders=predict_loader,
                 ckpt_path=config.ckpt_path,
             )
         logger.experiment.alert(
-            title="Prediction Complete",
-            text="Prediction process has successfully finished.",
+            title="Predicting Complete",
+            text="Predicting process has successfully finished.",
             level="INFO",
         )
     except Exception as e:
         logger.experiment.alert(
-            title="Prediction Error",
-            text="An error occurred during prediction",
+            title="Predicting Error",
+            text="An error occurred during predicting",
             level="ERROR",
         )
         raise e
+
+    flattened_logits = [logit.view(-1) for logit in logits]
+    all_logits = torch.cat(
+        flattened_logits,
+        dim=0,
+    ).numpy()
+    all_predictions = np.argmax(
+        all_logits,
+        axis=1,
+    )
+    if not os.path.exists(f"{config.connected_dir}/logits"):
+        os.makedirs(f"{config.connected_dir}/logits")
+    np.save(
+        f"{config.connected_dir}/logits/{config.logit_name}.npy",
+        all_logits,
+    )
+    pred_df = pd.read_csv(f"{config.connected_dir}/data/predict.csv")
+    pred_df["target"] = all_predictions
+    if not os.path.exists(f"{config.connected_dir}/submissions"):
+        os.makedirs(f"{config.connected_dir}/submissions")
+    pred_df.to_csv(
+        f"{config.connected_dir}/submissions/{config.submission_name}.csv",
+        index=False,
+    )
 
 
 def tune(
