@@ -17,7 +17,10 @@ class CustomDataset(Dataset):
         super().__init__()
         self.data_path = data_path
         self.split = split
-        self.data_list = self.load_data(data_path, split)
+        self.data_list = self.load_data(
+            data_path,
+            split,
+        )
 
     def __len__(self) -> int:
         return len(self.data_list)
