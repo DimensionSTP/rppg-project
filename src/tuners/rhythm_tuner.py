@@ -147,6 +147,7 @@ class RhythmTuner:
             strategy=self.module_params.strategy,
             log_every_n_steps=self.module_params.log_every_n_steps,
             precision=self.module_params.precision,
+            accumulate_grad_batches=self.module_params.accumulate_grad_batches,
             max_epochs=self.module_params.max_epochs,
             enable_checkpointing=False,
             callbacks=callbacks,
