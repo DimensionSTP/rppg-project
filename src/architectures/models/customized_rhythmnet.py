@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Dict
 
 import torch
 from torch import nn
@@ -74,14 +74,20 @@ class CustomizedRhythmNet(nn.Module):
     def forward(
         self,
         st_maps: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Dict[str, torch.Tensor]:
         batched_output_per_clip = []
         rnn_input_per_clip = []
         hr_per_clip = []
 
         for t in range(st_maps.size(1)):
             x = self.backbone(
-                st_maps[:, t, :, :, :],
+                st_maps[
+                    :,
+                    t,
+                    :,
+                    :,
+                    :,
+                ],
             )
             # Save CNN features per clip for the RNN
             rnn_input_per_clip.append(x)
@@ -95,20 +101,38 @@ class CustomizedRhythmNet(nn.Module):
         regression_output = torch.stack(
             batched_output_per_clip,
             dim=0,
-        ).permute(1, 2, 0)
+        ).permute(
+            1,
+            2,
+            0,
+        )
         # Trying out RNN in addition to the regression now.
         rnn_input = torch.stack(
             rnn_input_per_clip,
             dim=0,
-        ).permute(1, 0, 2)
+        ).permute(
+            1,
+            0,
+            2,
+        )
         rnn_output, _ = self.rnn(rnn_input)
         for i in range(rnn_output.size(1)):
             hr = self.fc_rnn(
-                rnn_output[:, i, :],
+                rnn_output[
+                    :,
+                    i,
+                    :,
+                ],
             )
             hr_per_clip.append(hr.flatten())
         rnn_output_seq = torch.stack(
             hr_per_clip,
             dim=0,
-        ).permute(1, 0)
-        return (regression_output, rnn_output_seq)
+        ).permute(
+            1,
+            0,
+        )
+        return {
+            "regression_output": regression_output,
+            "rnn_output_sequence": rnn_output_seq,
+        }
