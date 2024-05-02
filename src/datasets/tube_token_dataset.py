@@ -47,7 +47,7 @@ class VIPLDataset(Dataset):
         frame_rate = self.preprocessed_dataset.iloc[idx, 2]
         avg_hr = self.preprocessed_dataset.iloc[idx, 3]
         ecg_label = self.preprocessed_dataset.iloc[idx, 5 : 5 + 160].values
-        return (tube_token, frame_rate, avg_hr, ecg_label)
+        return (tube_token, frame_rate, avg_hr, ecg_label, idx)
 
     def get_single_tube_token(
         self,

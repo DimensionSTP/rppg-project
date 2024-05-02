@@ -40,7 +40,7 @@ class CustomDataset(Dataset):
             list(label_df["BPM"]),
             dtype=torch.float32,
         )
-        return (stmap, label)
+        return (stmap, label, idx)
 
     @staticmethod
     def load_data(
