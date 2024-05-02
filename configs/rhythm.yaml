@@ -58,6 +58,8 @@ save_detail: backbone${backbone}-rnn_type${rnn_type}-rnn_num_layers${rnn_num_lay
 resumed_step: 0
 ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch${epoch}.ckpt
 
+submission_file_name: test
+target_column_name: target
 logit_name: ${save_detail}-epoch${epoch}
 submission_name: ${save_detail}-epoch${epoch}
 
