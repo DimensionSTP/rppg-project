@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Dict, Any, List
 import glob
 
 import numpy as np
@@ -17,10 +17,7 @@ class CustomDataset(Dataset):
         super().__init__()
         self.data_path = data_path
         self.split = split
-        self.data_list = self.load_data(
-            data_path,
-            split,
-        )
+        self.data_list = self.get_dataset()
 
     def __len__(self) -> int:
         return len(self.data_list)
@@ -28,7 +25,7 @@ class CustomDataset(Dataset):
     def __getitem__(
         self,
         idx: int,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    ) -> Dict[str, Any]:
         stmap_path = self.data_path[:-1]
         stmap_name = self.data_list[idx].split("/")[-1][:-4] + ".npy"
         stmap = torch.tensor(
@@ -40,13 +37,13 @@ class CustomDataset(Dataset):
             list(label_df["BPM"]),
             dtype=torch.float32,
         )
-        return (stmap, label, idx)
+        return {
+            "stmap": stmap,
+            "label": label,
+            "index": idx,
+        }
 
-    @staticmethod
-    def load_data(
-        data_path: str,
-        split: str,
-    ) -> List[str]:
-        data_list = glob.glob(data_path + split + "/hrvs/*.csv")
+    def get_dataset(self) -> List[str]:
+        data_list = glob.glob(self.data_path + self.split + "/hrvs/*.csv")
         data_list = [i.replace("\\", "/", 10) for i in data_list]
         return data_list

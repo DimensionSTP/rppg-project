@@ -1,5 +1,5 @@
+from typing import Dict, Any
 import os
-from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -28,12 +28,12 @@ class VIPLDataset(Dataset):
         self.transform = transform
 
     def __len__(self) -> int:
-        pass
+        len(self.preprocessed_dataset)
 
     def __getitem__(
         self,
         idx: int,
-    ) -> Tuple[np.ndarray, float, float, np.ndarray]:
+    ) -> Dict[str, Any]:
         video_path = os.path.join(
             self.root_dir,
             str(self.preprocessed_dataset.iloc[idx, 0]),
@@ -47,7 +47,13 @@ class VIPLDataset(Dataset):
         frame_rate = self.preprocessed_dataset.iloc[idx, 2]
         avg_hr = self.preprocessed_dataset.iloc[idx, 3]
         ecg_label = self.preprocessed_dataset.iloc[idx, 5 : 5 + 160].values
-        return (tube_token, frame_rate, avg_hr, ecg_label, idx)
+        return {
+            "tube_token": tube_token,
+            "frame_rate": frame_rate,
+            "average_hr": avg_hr,
+            "label": ecg_label,
+            "index": idx,
+        }
 
     def get_single_tube_token(
         self,
@@ -74,12 +80,20 @@ class VIPLDataset(Dataset):
                 image = cv2.imread(self.root_dir + "p30/v1/source2/image_00737.png")
             image = cv2.resize(
                 image,
-                (128 + crop_range, 128 + crop_range),
+                (
+                    128 + crop_range,
+                    128 + crop_range,
+                ),
                 interpolation=cv2.INTER_CUBIC,
             )[
                 (crop_range // 2) : (128 + crop_range // 2),
                 (crop_range // 2) : (128 + crop_range // 2),
                 :,
             ]
-            tube_token[i, :, :, :] = image
+            tube_token[
+                i,
+                :,
+                :,
+                :,
+            ] = image
         return tube_token
