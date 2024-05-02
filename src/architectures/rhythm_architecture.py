@@ -41,7 +41,7 @@ class RythmArchitecture(LightningModule):
         self,
         batch: Tuple[torch.Tensor, torch.Tensor],
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        stmap, label = batch
+        stmap, label, index = batch
         pred = self(stmap)
         loss = F.mse_loss(
             pred,
@@ -51,7 +51,7 @@ class RythmArchitecture(LightningModule):
             pred,
             label,
         )
-        return (loss, pred, label, visual_loss)
+        return (loss, pred, label, visual_loss, index)
 
     def configure_optimizers(self) -> Dict[str, Any]:
         if self.strategy == "deepspeed_stage_3":
@@ -87,7 +87,7 @@ class RythmArchitecture(LightningModule):
         batch: Tuple[torch.Tensor, torch.Tensor],
         batch_idx: int,
     ) -> Dict[str, torch.Tensor]:
-        loss, pred, label, visual_loss = self.step(batch)
+        loss, pred, label, visual_loss, _ = self.step(batch)
         self.log(
             "train_rmse_loss",
             math.sqrt(loss),
@@ -111,7 +111,7 @@ class RythmArchitecture(LightningModule):
         batch: Tuple[torch.Tensor, torch.Tensor],
         batch_idx: int,
     ) -> Dict[str, torch.Tensor]:
-        loss, pred, label, visual_loss = self.step(batch)
+        loss, pred, label, visual_loss, _ = self.step(batch)
         self.log(
             "val_rmse_loss",
             math.sqrt(loss),
@@ -135,7 +135,7 @@ class RythmArchitecture(LightningModule):
         batch: Tuple[torch.Tensor, torch.Tensor],
         batch_idx: int,
     ) -> Dict[str, torch.Tensor]:
-        loss, pred, label, visual_loss = self.step(batch)
+        loss, pred, label, visual_loss, _ = self.step(batch)
         self.log(
             "test_rmse_loss",
             math.sqrt(loss),
@@ -159,9 +159,11 @@ class RythmArchitecture(LightningModule):
         batch: Tuple[torch.Tensor, torch.Tensor],
         batch_idx: int,
     ) -> torch.Tensor:
-        _, pred, _, _ = self.step(batch)
-        gathered_pred = self.all_gather(pred)
-        return gathered_pred
+        _, pred, _, _, index = self.step(batch)
+        index = index.unsqueeze(-1).float()
+        output = torch.cat((pred, index), dim=-1)
+        gathered_output = self.all_gather(output)
+        return gathered_output
 
     def on_train_epoch_end(self) -> None:
         pass
