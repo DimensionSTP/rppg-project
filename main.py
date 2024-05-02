@@ -1,3 +1,8 @@
+import os
+
+os.environ["HYDRA_FULL_ERROR"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import json
 
 import hydra
@@ -6,13 +11,25 @@ from omegaconf import OmegaConf, DictConfig
 from src.pipelines.pipeline import train, test, predict, tune
 
 
-@hydra.main(config_path="configs/", config_name="rhythm.yaml")
+@hydra.main(
+    config_path="configs/",
+    config_name="rhythm.yaml",
+)
 def main(
     config: DictConfig,
 ) -> None:
     if config.is_tuned == "tuned":
-        params = json.load(open(config.tuned_hparams_path, "rt", encoding="UTF-8"))
-        config = OmegaConf.merge(config, params)
+        params = json.load(
+            open(
+                config.tuned_hparams_path,
+                "rt",
+                encoding="UTF-8",
+            )
+        )
+        config = OmegaConf.merge(
+            config,
+            params,
+        )
     elif config.is_tuned == "untuned":
         pass
     else:

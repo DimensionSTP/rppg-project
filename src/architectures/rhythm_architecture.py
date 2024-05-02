@@ -1,11 +1,8 @@
-import os
+from typing import Dict, Any
 import math
-from typing import Tuple, Dict, Any
-
-import pandas as pd
 
 import torch
-from torch import nn, optim
+from torch import optim, nn
 from torch.nn import functional as F
 
 from lightning.pytorch import LightningModule
@@ -36,44 +33,78 @@ class RythmArchitecture(LightningModule):
     def forward(
         self,
         stmap: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        _, output = self.model(stmap)
-        return output
+    ) -> torch.Tensor:
+        output = self.model(stmap)
+        rnn_output_seq = output["rnn_output_sequence"]
+        return rnn_output_seq
 
     def step(
         self,
-        batch: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        stmap, label = batch
+        batch: Dict[str, Any],
+    ) -> Dict[str, torch.Tensor]:
+        stmap, label, index = batch
+        stmap = batch["stmap"]
+        label = batch["label"]
+        index = batch["index"]
         pred = self(stmap)
-        loss = F.mse_loss(pred, label)
-        visual_loss = F.l1_loss(pred, label)
-        return (loss, pred, label, visual_loss)
+        loss = F.mse_loss(
+            pred,
+            label,
+        )
+        visual_loss = F.l1_loss(
+            pred,
+            label,
+        )
+        return {
+            "loss": loss,
+            "pred": pred,
+            "label": label,
+            "visual_loss": visual_loss,
+            "index": index,
+        }
 
     def configure_optimizers(self) -> Dict[str, Any]:
         if self.strategy == "deepspeed_stage_3":
-            optimizer = FusedAdam(self.parameters(), lr=self.lr)
+            optimizer = FusedAdam(
+                self.parameters(),
+                lr=self.lr,
+            )
         elif (
             self.strategy == "deepspeed_stage_2_offload"
             or self.strategy == "deepspeed_stage_3_offload"
         ):
-            optimizer = DeepSpeedCPUAdam(self.parameters(), lr=self.lr)
+            optimizer = DeepSpeedCPUAdam(
+                self.parameters(),
+                lr=self.lr,
+            )
         else:
-            optimizer = optim.AdamW(self.parameters(), lr=self.lr)
+            optimizer = optim.AdamW(
+                self.parameters(),
+                lr=self.lr,
+            )
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=self.t_max, eta_min=self.eta_min
+            optimizer=optimizer,
+            T_max=self.t_max,
+            eta_min=self.eta_min,
         )
         return {
             "optimizer": optimizer,
-            "lr_scheduler": {"scheduler": scheduler, "interval": self.interval},
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": self.interval,
+            },
         }
 
     def training_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch: Dict[str, Any],
         batch_idx: int,
-    ) -> torch.Tensor:
-        loss, pred, label, visual_loss = self.step(batch)
+    ) -> Dict[str, torch.Tensor]:
+        output = self.step(batch)
+        loss = output["loss"]
+        pred = output["pred"]
+        label = output["label"]
+        visual_loss = output["visual_loss"]
         self.log(
             "train_rmse_loss",
             math.sqrt(loss),
@@ -90,14 +121,22 @@ class RythmArchitecture(LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
-        return loss
+        return {
+            "loss": loss,
+            "pred": pred,
+            "label": label,
+        }
 
     def validation_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch: Dict[str, Any],
         batch_idx: int,
-    ) -> torch.Tensor:
-        loss, pred, label, visual_loss = self.step(batch)
+    ) -> Dict[str, torch.Tensor]:
+        output = self.step(batch)
+        loss = output["loss"]
+        pred = output["pred"]
+        label = output["label"]
+        visual_loss = output["visual_loss"]
         self.log(
             "val_rmse_loss",
             math.sqrt(loss),
@@ -114,14 +153,22 @@ class RythmArchitecture(LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
-        return loss
+        return {
+            "loss": loss,
+            "pred": pred,
+            "label": label,
+        }
 
     def test_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch: Dict[str, Any],
         batch_idx: int,
-    ) -> torch.Tensor:
-        loss, pred, label, visual_loss = self.step(batch)
+    ) -> Dict[str, torch.Tensor]:
+        output = self.step(batch)
+        loss = output["loss"]
+        pred = output["pred"]
+        label = output["label"]
+        visual_loss = output["visual_loss"]
         self.log(
             "test_rmse_loss",
             math.sqrt(loss),
@@ -138,38 +185,36 @@ class RythmArchitecture(LightningModule):
             prog_bar=True,
             sync_dist=True,
         )
-        return loss
+        return {
+            "loss": loss,
+            "pred": pred,
+            "label": label,
+        }
 
     def predict_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor],
+        batch: Dict[str, Any],
         batch_idx: int,
-    ) -> None:
-        loss, pred, label, visual_loss = self.step(batch)
-        pred = pred.view(-1)
-        label = label.view(-1)
-        pred = pred.tolist()
-        label = label.tolist()
-        table = {"pred": pred, "label": label}
-        df = pd.DataFrame(table)
-        if not os.path.exists(f"{self.connected_dir}/records"):
-            os.makedirs(f"{self.connected_dir}/records")
-        df.to_csv(f"{self.connected_dir}/records/{batch_idx}.csv", index=False)
+    ) -> torch.Tensor:
+        output = self.step(batch)
+        pred = output["pred"]
+        index = output["index"]
+        index = index.unsqueeze(-1).float()
+        output = torch.cat(
+            (
+                pred,
+                index,
+            ),
+            dim=-1,
+        )
+        gathered_output = self.all_gather(output)
+        return gathered_output
 
-    def train_epoch_end(
-        self,
-        train_step_outputs: torch.Tensor,
-    ) -> None:
+    def on_train_epoch_end(self) -> None:
         pass
 
-    def validation_epoch_end(
-        self,
-        validation_step_outputs: torch.Tensor,
-    ) -> None:
+    def on_validation_epoch_end(self) -> None:
         pass
 
-    def test_epoch_end(
-        self,
-        test_step_outputs: torch.Tensor,
-    ) -> None:
+    def on_test_epoch_end(self) -> None:
         pass

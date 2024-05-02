@@ -1,5 +1,9 @@
 import os
 
+import numpy as np
+import pandas as pd
+import torch
+
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 
@@ -39,6 +43,14 @@ def train(
     logged_hparams["seed"] = config.seed
     for key, value in config.trainer.items():
         if key != "_target_":
+            logged_hparams[key] = value
+    for key, value in config.dataset.items():
+        if key not in [
+            "_target_",
+            "data_path",
+            "split",
+            "seed",
+        ]:
             logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
@@ -123,6 +135,14 @@ def test(
     for key, value in config.trainer.items():
         if key != "_target_":
             logged_hparams[key] = value
+    for key, value in config.dataset.items():
+        if key not in [
+            "_target_",
+            "data_path",
+            "split",
+            "seed",
+        ]:
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
     if (
@@ -201,6 +221,14 @@ def predict(
     for key, value in config.trainer.items():
         if key != "_target_":
             logged_hparams[key] = value
+    for key, value in config.dataset.items():
+        if key not in [
+            "_target_",
+            "data_path",
+            "split",
+            "seed",
+        ]:
+            logged_hparams[key] = value
     logger.log_hyperparams(logged_hparams)
 
     if (
@@ -227,29 +255,76 @@ def predict(
             config.strategy == "deepspeed_stage_3"
             or config.strategy == "deepspeed_stage_3_offload"
         ):
-            trainer.predict(
+            logits = trainer.predict(
                 model=architecture,
                 dataloaders=predict_loader,
                 ckpt_path=f"{config.ckpt_path}/model.pt",
             )
         else:
-            trainer.predict(
+            logits = trainer.predict(
                 model=architecture,
                 dataloaders=predict_loader,
                 ckpt_path=config.ckpt_path,
             )
         logger.experiment.alert(
-            title="Prediction Complete",
-            text="Prediction process has successfully finished.",
+            title="Predicting Complete",
+            text="Predicting process has successfully finished.",
             level="INFO",
         )
     except Exception as e:
         logger.experiment.alert(
-            title="Prediction Error",
-            text="An error occurred during prediction",
+            title="Predicting Error",
+            text="An error occurred during predicting",
             level="ERROR",
         )
         raise e
+
+    if len(logits[0].shape) == 3:
+        logits = [
+            torch.cat(
+                logit.split(
+                    1,
+                    dim=0,
+                ),
+                dim=1,
+            ).view(
+                -1,
+                logits[0].shape[-1],
+            )
+            for logit in logits
+        ]
+    all_logits = torch.cat(
+        logits,
+        dim=0,
+    )
+    sorted_logits_with_indices = all_logits[all_logits[:, -1].argsort()]
+    sorted_logits = sorted_logits_with_indices[:, :-1].numpy()
+    all_predictions = np.argmax(
+        sorted_logits,
+        axis=1,
+    )
+    if not os.path.exists(f"{config.connected_dir}/logits"):
+        os.makedirs(
+            f"{config.connected_dir}/logits",
+            exist_ok=True,
+        )
+    np.save(
+        f"{config.connected_dir}/logits/{config.logit_name}.npy",
+        sorted_logits,
+    )
+    pred_df = pd.read_csv(
+        f"{config.connected_dir}/data/{config.submission_file_name}.csv"
+    )
+    pred_df[config.target_column_name] = all_predictions
+    if not os.path.exists(f"{config.connected_dir}/submissions"):
+        os.makedirs(
+            f"{config.connected_dir}/submissions",
+            exist_ok=True,
+        )
+    pred_df.to_csv(
+        f"{config.connected_dir}/submissions/{config.submission_name}.csv",
+        index=False,
+    )
 
 
 def tune(
