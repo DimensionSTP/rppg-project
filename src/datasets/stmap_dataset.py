@@ -13,9 +13,11 @@ class CustomDataset(Dataset):
         self,
         data_path: str,
         split: str,
+        target_column_name: str,
     ) -> None:
         super().__init__()
         self.data_path = data_path
+        self.target_column_name = target_column_name
         self.split = split
         self.data_list = self.get_dataset()
 
@@ -34,7 +36,7 @@ class CustomDataset(Dataset):
         )
         label_df = pd.read_csv(self.data_list[idx])
         label = torch.tensor(
-            list(label_df["BPM"]),
+            list(label_df[self.target_column_name]),
             dtype=torch.float32,
         )
         return {

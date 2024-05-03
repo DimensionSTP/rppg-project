@@ -1,3 +1,4 @@
 _target_: src.datasets.stmap_dataset.CustomDataset
 data_path: ${connected_dir}/preprocessed_dataset/
 split: ${split.train}
+target_column_name: ${target_column_name}
