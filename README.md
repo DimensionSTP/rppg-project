@@ -25,29 +25,30 @@ pip install -r requirements.txt
 
 * end-to-end
 ```shell
-python main.py mode=tune is_tuned=untuned
+python main.py mode=tune is_tuned=untuned num_trials={num_trials}
 ```
 
 ### Training
 
 * end-to-end
 ```shell
-python main.py mode=train is_tuned={tuned or untuned}
+python main.py mode=train is_tuned={tuned or untuned} num_trials={num_trials}
 ```
 
 ### Testing
 
 * end-to-end
 ```shell
-python main.py mode=test is_tuned={tuned or untuned} epoch={ckpt epoch}
+python main.py mode=test is_tuned={tuned or untuned} num_trials={num_trials} epoch={ckpt epoch}
 ```
 
 ### Prediction
 
 * end-to-end
 ```shell
-python main.py mode=predict is_tuned={tuned or untuned} epoch={ckpt epoch}
+python main.py mode=predict is_tuned={tuned or untuned} num_trials={num_trials} epoch={ckpt epoch}
 ```
+
 
 __If you want to change main config, use --config-name={config_name}.__
 
