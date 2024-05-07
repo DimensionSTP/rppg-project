@@ -14,11 +14,15 @@ class CustomDataset(Dataset):
         data_path: str,
         split: str,
         target_column_name: str,
+        num_devices: int,
+        batch_size: int,
     ) -> None:
         super().__init__()
         self.data_path = data_path
-        self.target_column_name = target_column_name
         self.split = split
+        self.target_column_name = target_column_name
+        self.num_devices = num_devices
+        self.batch_size = batch_size
         self.data_list = self.get_dataset()
 
     def __len__(self) -> int:
@@ -54,6 +58,13 @@ class CustomDataset(Dataset):
     def get_dataset(self) -> List[str]:
         if self.split == "predict":
             data_list = glob.glob(self.data_path + "test" + "/hrvs/*.csv")
+            if self.num_devices > 1:
+                last_data = data_list[-1]
+                total_batch_size = self.num_devices * self.batch_size
+                remainder = (len(data_list) % total_batch_size) % self.num_devices
+                if remainder != 0:
+                    num_dummies = self.num_devices - remainder
+                    data_list.extend([last_data for _ in range(num_dummies)])
         else:
             data_list = glob.glob(self.data_path + self.split + "/hrvs/*.csv")
         data_list = [i.replace("\\", "/", 10) for i in data_list]
