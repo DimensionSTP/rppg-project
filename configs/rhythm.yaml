@@ -18,6 +18,7 @@ split:
   train: train
   val: val
   test: test
+  predict: predict
 
 batch_size: 128
 

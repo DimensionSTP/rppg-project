@@ -57,9 +57,9 @@ class RythmArchitecture(LightningModule):
         )
         return {
             "loss": loss,
+            "visual_loss": visual_loss,
             "pred": pred,
             "label": label,
-            "visual_loss": visual_loss,
             "index": index,
         }
 
@@ -102,9 +102,9 @@ class RythmArchitecture(LightningModule):
     ) -> Dict[str, torch.Tensor]:
         output = self.step(batch)
         loss = output["loss"]
+        visual_loss = output["visual_loss"]
         pred = output["pred"]
         label = output["label"]
-        visual_loss = output["visual_loss"]
         self.log(
             "train_rmse_loss",
             math.sqrt(loss),
@@ -134,9 +134,9 @@ class RythmArchitecture(LightningModule):
     ) -> Dict[str, torch.Tensor]:
         output = self.step(batch)
         loss = output["loss"]
+        visual_loss = output["visual_loss"]
         pred = output["pred"]
         label = output["label"]
-        visual_loss = output["visual_loss"]
         self.log(
             "val_rmse_loss",
             math.sqrt(loss),
@@ -166,9 +166,9 @@ class RythmArchitecture(LightningModule):
     ) -> Dict[str, torch.Tensor]:
         output = self.step(batch)
         loss = output["loss"]
+        visual_loss = output["visual_loss"]
         pred = output["pred"]
         label = output["label"]
-        visual_loss = output["visual_loss"]
         self.log(
             "test_rmse_loss",
             math.sqrt(loss),
