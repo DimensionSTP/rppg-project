@@ -42,7 +42,6 @@ class RythmArchitecture(LightningModule):
         self,
         batch: Dict[str, Any],
     ) -> Dict[str, torch.Tensor]:
-        stmap, label, index = batch
         stmap = batch["stmap"]
         label = batch["label"]
         index = batch["index"]
