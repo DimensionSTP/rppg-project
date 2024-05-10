@@ -19,9 +19,10 @@ def softly_vote_logits(
     config: DictConfig,
 ) -> None:
     basic_path = config.basic_path
+    voted_logit = config.voted_logit
     submission_file = config.submission_file
     target_column_name = config.target_column_name
-    voting_file = config.voting_file
+    voted_file = config.voted_file
     votings = config.votings
 
     weights = list(votings.values())
@@ -39,14 +40,15 @@ def softly_vote_logits(
         else:
             weighted_logits += logit * weight
 
-    ensemble_predictions = np.argmax(
-        weighted_logits,
-        axis=1,
-    )
+    ensemble_predictions = weighted_logits
     submission_df = pd.read_csv(submission_file)
+    np.save(
+        voted_logit,
+        weighted_logits,
+    )
     submission_df[target_column_name] = ensemble_predictions
     submission_df.to_csv(
-        voting_file,
+        voted_file,
         index=False,
     )
 
