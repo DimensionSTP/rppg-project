@@ -11,3 +11,4 @@ logs/wandb/
 multirun/
 tmp*
 !requirements.txt
+!packages.txt
