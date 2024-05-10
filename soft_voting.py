@@ -39,10 +39,7 @@ def softly_vote_logits(
         else:
             weighted_logits += logit * weight
 
-    ensemble_predictions = np.argmax(
-        weighted_logits,
-        axis=1,
-    )
+    ensemble_predictions = weighted_logits
     submission_df = pd.read_csv(submission_file)
     submission_df[target_column_name] = ensemble_predictions
     submission_df.to_csv(
