@@ -31,6 +31,7 @@ rnn_num_layers: 1
 direction: bi
 
 lr: 0.0001
+weight_decay: 0.01
 period: 2
 eta_min: 0.00001
 
