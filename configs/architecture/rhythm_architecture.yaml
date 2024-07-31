@@ -11,7 +11,7 @@ model:
 strategy: ${strategy}
 lr: ${lr}
 weight_decay: ${weight_decay}
-period: ${period}
-eta_min: ${eta_min}
+half_period: ${half_period}
+eta_min_rate: ${eta_min_rate}
 interval: step
 connected_dir: ${connected_dir}
