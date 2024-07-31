@@ -116,19 +116,19 @@ class RhythmTuner:
                 high=self.hparams.weight_decay.high,
                 log=self.hparams.weight_decay.log,
             )
-        if self.hparams.period:
-            params["period"] = trial.suggest_int(
-                name="period",
-                low=self.hparams.period.low,
-                high=self.hparams.period.high,
-                log=self.hparams.period.log,
+        if self.hparams.half_period:
+            params["half_period"] = trial.suggest_int(
+                name="half_period",
+                low=self.hparams.half_period.low,
+                high=self.hparams.half_period.high,
+                log=self.hparams.half_period.log,
             )
-        if self.hparams.eta_min:
-            params["eta_min"] = trial.suggest_float(
-                name="eta_min",
-                low=self.hparams.eta_min.low,
-                high=self.hparams.eta_min.high,
-                log=self.hparams.eta_min.log,
+        if self.hparams.eta_min_rate:
+            params["eta_min_rate"] = trial.suggest_float(
+                name="eta_min_rate",
+                low=self.hparams.eta_min_rate.low,
+                high=self.hparams.eta_min_rate.high,
+                log=self.hparams.eta_min_rate.log,
             )
 
         model = CustomizedRhythmNet(
@@ -143,8 +143,8 @@ class RhythmTuner:
             strategy=self.module_params.strategy,
             lr=params["lr"],
             weight_decay=params["weight_decay"],
-            period=params["period"],
-            eta_min=params["eta_min"],
+            half_period=params["half_period"],
+            eta_min_rate=params["eta_min_rate"],
             interval=self.module_params.interval,
             connected_dir=self.module_params.connected_dir,
         )
