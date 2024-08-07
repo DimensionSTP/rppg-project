@@ -51,7 +51,7 @@ gradient_clip_algorithm: norm
 epoch: 100
 
 model_name: CustomizedRhythmNet
-dataset_name: Custom
+dataset_name: CustomRPPG
 mode: train
 
 is_tuned: tuned
@@ -70,6 +70,7 @@ logit_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
+model_detail: RhythmNet-customized
 upload_tag: rPPG
 num_safetensors: 2
 
