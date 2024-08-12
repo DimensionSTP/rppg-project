@@ -30,10 +30,10 @@ rnn_type: gru
 rnn_num_layers: 1
 direction: bi
 
-lr: 0.0001
+lr: 0.001
 weight_decay: 0.01
-half_period: 1
-eta_min_rate: 0.1
+warmup_rate: 0.05
+eta_min_rate: 0.01
 
 monitor: val_rmse_loss
 tracking_direction: min
@@ -48,7 +48,7 @@ precision: 32
 accumulate_grad_batches: 1
 gradient_clip_val: 1
 gradient_clip_algorithm: norm
-epoch: 100
+epoch: 20
 
 model_name: CustomizedRhythmNet
 dataset_name: CustomRPPG

@@ -17,7 +17,7 @@ class RythmArchitecture(LightningModule):
         strategy: str,
         lr: float,
         weight_decay: float,
-        half_period: int,
+        warmup_rate: float,
         eta_min_rate: float,
         interval: str,
         connected_dir: str,
@@ -27,7 +27,7 @@ class RythmArchitecture(LightningModule):
         self.strategy = strategy
         self.lr = lr
         self.weight_decay = weight_decay
-        self.half_period = half_period
+        self.warmup_rate = warmup_rate
         self.eta_min_rate = eta_min_rate
         self.interval = interval
         self.connected_dir = connected_dir
@@ -86,12 +86,34 @@ class RythmArchitecture(LightningModule):
                 lr=self.lr,
                 weight_decay=self.weight_decay,
             )
-        t_max = self.half_period * self.trainer.num_training_batches
+        total_steps = self.trainer.estimated_stepping_batches * self.trainer.max_epochs
+        warmup_steps = int(total_steps * self.warmup_rate)
+        t_max = total_steps - warmup_steps
         eta_min = self.lr * self.eta_min_rate
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(
+
+        def lr_lambda(current_step):
+            if current_step < warmup_steps:
+                return float(current_step) / float(max(1, warmup_steps))
+            return 1.0
+
+        warmup_scheduler = optim.lr_scheduler.LambdaLR(
+            optimizer,
+            lr_lambda,
+        )
+        main_scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer=optimizer,
             T_max=t_max,
             eta_min=eta_min,
+        )
+        scheduler = optim.lr_scheduler.SequentialLR(
+            optimizer,
+            schedulers=[
+                warmup_scheduler,
+                main_scheduler,
+            ],
+            milestones=[
+                warmup_steps,
+            ],
         )
         return {
             "optimizer": optimizer,
