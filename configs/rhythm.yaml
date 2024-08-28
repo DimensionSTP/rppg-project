@@ -30,10 +30,10 @@ rnn_type: gru
 rnn_num_layers: 1
 direction: bi
 
-lr: 0.001
-weight_decay: 0.01
-warmup_rate: 0.05
-eta_min_rate: 0.01
+lr: 1e-3
+weight_decay: 1e-2
+warmup_ratio: 5e-2
+eta_min_ratio: 1e-2
 
 monitor: val_rmse_loss
 tracking_direction: min
