@@ -68,8 +68,7 @@ class VIPLDataset(Dataset):
         frame_rate = self.frame_rates[idx]
         bpm = self.bpms[idx]
         ecg_label = np.array(
-            self.labels[idx][5 : 5 + 160],
-            dtype=int,
+            self.labels[idx][:160],
         )
         return {
             "encoded": tube_token,
