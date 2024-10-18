@@ -1,63 +1,143 @@
-from typing import Dict, Any
+from typing import Dict, Any, List
 import os
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 import cv2
 
-import torch
 from torch.utils.data import Dataset
 
 
 class VIPLDataset(Dataset):
     def __init__(
         self,
-        clip_frame_size: int,
-        preprocessed_dataset: str,
         data_path: str,
-        transform: torch,
+        metadata_path: str,
+        split: str,
+        split_ratio: float,
+        seed: int,
+        file_path_column_name: str,
+        frame_index_column_name: str,
+        frame_rate_column_name: str,
+        bpm_column_name: str,
+        ecg_column_name: str,
+        num_devices: int,
+        batch_size: int,
+        clip_frame_size: int,
     ) -> None:
         super().__init__()
-        self.clip_frame_size = clip_frame_size
-        self.preprocessed_dataset = pd.read_csv(
-            preprocessed_dataset,
-            delimiter=" ",
-            header=None,
-        )
         self.data_path = data_path
-        self.transform = transform
+        self.metadata_path = metadata_path
+        self.split = split
+        self.split_ratio = split_ratio
+        self.seed = seed
+        self.file_path_column_name = file_path_column_name
+        self.frame_index_column_name = frame_index_column_name
+        self.frame_rate_column_name = frame_rate_column_name
+        self.bpm_column_name = bpm_column_name
+        self.ecg_column_name = ecg_column_name
+        self.num_devices = num_devices
+        self.batch_size = batch_size
+        metadata = self.get_metadata()
+        self.file_paths = metadata["file_paths"]
+        self.frame_idices = metadata["frame_idices"]
+        self.frame_rates = metadata["frame_rates"]
+        self.bpms = metadata["bpms"]
+        self.labels = metadata["labels"]
+        self.clip_frame_size = clip_frame_size
 
     def __len__(self) -> int:
-        len(self.preprocessed_dataset)
+        len(self.bpms)
 
     def __getitem__(
         self,
         idx: int,
     ) -> Dict[str, Any]:
-        video_path = os.path.join(
-            self.root_dir,
-            str(self.preprocessed_dataset.iloc[idx, 0]),
+        images_path = os.path.join(
+            self.data_path,
+            str(self.file_paths[idx]),
+            "mp_rgb_full",
         )
-        start_frame = self.preprocessed_dataset.iloc[idx, 1]
+        start_frame = self.frame_idices[idx]
 
         tube_token = self.get_single_tube_token(
-            video_path,
+            images_path,
             start_frame,
         )
-        frame_rate = self.preprocessed_dataset.iloc[idx, 2]
-        avg_hr = self.preprocessed_dataset.iloc[idx, 3]
-        ecg_label = self.preprocessed_dataset.iloc[idx, 5 : 5 + 160].values
+        frame_rate = self.frame_rates[idx]
+        bpm = self.bpms[idx]
+        ecg_label = np.array(
+            self.labels[idx][5 : 5 + 160],
+            dtype=int,
+        )
         return {
-            "tube_token": tube_token,
-            "frame_rate": frame_rate,
-            "average_hr": avg_hr,
+            "encoded": tube_token,
+            self.frame_rate_column_name: frame_rate,
+            self.bpm_column_name: bpm,
             "label": ecg_label,
             "index": idx,
         }
 
+    def get_metadata(self) -> Dict[str, List[Any]]:
+        if self.split in ["train", "val"]:
+            pickle_path = f"{self.metadata_path}/vipl/fold1_train.pkl"
+            data = pd.read_pickle(pickle_path)
+            data = data.fillna("_")
+            train_data, val_data = train_test_split(
+                data,
+                test_size=self.split_ratio,
+                random_state=self.seed,
+                shuffle=True,
+            )
+            if self.split == "train":
+                data = train_data
+            else:
+                data = val_data
+        elif self.split == "test":
+            pickle_path = f"{self.metadata_path}/vipl/fold1_{self.split}1.pkl"
+            data = pd.read_pickle(pickle_path)
+            data = data.fillna("_")
+        elif self.split == "predict":
+            pickle_path = f"{self.metadata_path}/vipl/fold1_test1.pkl"
+            data = pd.read_pickle(pickle_path)
+            data = data.fillna("_")
+            if self.num_devices > 1:
+                last_row = data.iloc[-1]
+                total_batch_size = self.num_devices * self.batch_size
+                remainder = (len(data) % total_batch_size) % self.num_devices
+                if remainder != 0:
+                    num_dummies = self.num_devices - remainder
+                    repeated_rows = pd.DataFrame([last_row] * num_dummies)
+                    repeated_rows.reset_index(
+                        drop=True,
+                        inplace=True,
+                    )
+                    data = pd.concat(
+                        [
+                            data,
+                            repeated_rows,
+                        ],
+                        ignore_index=True,
+                    )
+        else:
+            raise ValueError(f"Inavalid split: {self.split}")
+        file_paths = data[self.file_path_column_name].tolist()
+        frame_idices = data[self.frame_index_column_name].tolist()
+        frame_rates = data[self.frame_rate_column_name].tolist()
+        bpms = data[self.bpm_column_name].tolist()
+        labels = data[self.ecg_column_name].tolist()
+        return {
+            "file_paths": file_paths,
+            "frame_idices": frame_idices,
+            "frame_rates": frame_rates,
+            "bpms": bpms,
+            "labels": labels,
+        }
+
     def get_single_tube_token(
         self,
-        video_path: str,
+        images_path: str,
         start_frame: int,
     ) -> np.ndarray:
         tube_token = np.zeros(
@@ -72,11 +152,11 @@ class VIPLDataset(Dataset):
             frame = start_frame + i
             image_name = f"image_{frame:05d}.png"
             image_path = os.path.join(
-                video_path,
+                images_path,
                 image_name,
             )
             image = cv2.imread(image_path)
-            if image is None:  # It seems some frames missing
+            if image is None:
                 image = cv2.imread(self.root_dir + "p30/v1/source2/image_00737.png")
             image = cv2.resize(
                 image,
