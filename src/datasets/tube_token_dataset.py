@@ -140,10 +140,12 @@ class VIPLDataset(Dataset):
         start_frame: int,
     ) -> np.ndarray:
         tube_token = np.zeros(
-            self.clip_frame_size,
-            128,
-            128,
-            3,
+            (
+                self.clip_frame_size,
+                128,
+                128,
+                3,
+            ),
         )
         crop_range = np.random.randint(16)
 
