@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import cv2
+from einops import rearrange
 
 from torch.utils.data import Dataset
 
@@ -64,6 +65,11 @@ class VIPLDataset(Dataset):
         tube_token = self.get_single_tube_token(
             images_path,
             start_frame,
+        )
+        tube_token = (tube_token - 127.5) / 128
+        tube_token = rearrange(
+            tube_token,
+            "depth height width channel -> channel depth height width",
         )
         frame_rate = self.frame_rates[idx]
         bpm = self.bpms[idx]
