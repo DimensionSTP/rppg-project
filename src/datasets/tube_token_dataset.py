@@ -48,7 +48,7 @@ class VIPLDataset(Dataset):
         self.clip_frame_size = clip_frame_size
 
     def __len__(self) -> int:
-        len(self.bpms)
+        return len(self.bpms)
 
     def __getitem__(
         self,
