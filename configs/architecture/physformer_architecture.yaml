@@ -1,0 +1,17 @@
+_target_: src.architectures.physformer_architecture.PhysFormerArchitecture
+
+model:
+  _target_: src.architectures.models.customized_physformer.CustomizedPhysFormer
+  backbone: ${backbone}
+  backbone_pretrained: ${backbone_pretrained}
+  rnn_type: ${rnn_type}
+  rnn_num_layers: ${rnn_num_layers}
+  direction: ${direction}
+
+strategy: ${strategy}
+lr: ${lr}
+weight_decay: ${weight_decay}
+warmup_ratio: ${warmup_ratio}
+eta_min_ratio: ${eta_min_ratio}
+interval: step
+connected_dir: ${connected_dir}

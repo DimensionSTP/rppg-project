@@ -1,0 +1,81 @@
+# @package _global_
+defaults:
+  - dataset: tube_token_vipl_dataset
+  - architecture: physformer_architecture
+  - tuner: physformer_tuner
+  - logger: wandb
+  - hydra: hydra
+  - callbacks: callbacks
+  - trainer: trainer
+
+package_name: rppg-project
+project_dir: ${oc.env:PROJECT_DIR}/${package_name}
+connected_dir: ${oc.env:CONNECTED_DIR}/${package_name}
+
+seed: 2024
+
+split:
+  train: train
+  val: val
+  test: test
+  predict: predict
+
+batch_size: 128
+
+split_ratio: 1e-2
+file_path_column_name: file_path
+frame_index_column_name: frame_index
+frame_rate_column_name: frame_rate
+bpm_column_name: BPM
+ecg_column_name: ECG
+clip_frame_size: 160
+
+lr: 1e-3
+weight_decay: 1e-2
+warmup_ratio: 5e-2
+eta_min_ratio: 1e-3
+
+monitor: val_loss
+tracking_direction: min
+patience: 2
+min_delta: 0
+
+devices: ${oc.decode:${oc.env:DEVICES}}
+accelerator: gpu
+strategy: ddp
+log_every_n_steps: 10
+precision: 32
+accumulate_grad_batches: 1
+gradient_clip_val: 1
+gradient_clip_algorithm: norm
+epoch: 20
+
+model_name: PhysFormer
+dataset_name: VIPL
+mode: train
+
+is_tuned: untuned
+num_trials: 3
+hparams_save_path: ${connected_dir}/hparams/${model_name}/${dataset_name}/${num_trials}_trials
+tuned_hparams_path: ${hparams_save_path}/best_params.json
+
+project_name: ${model_name}-${dataset_name}-${mode}
+total_batch_size: bs=${batch_size}x${devices}x${accumulate_grad_batches}
+length_info: data_max_length=${data_max_length}-target_max_length=${target_max_length}
+save_detail: ${upload_user}_${model_type}-quantization_type=${quantization_type}-peft_type=${peft_type}-${length_info}-precision=${precision}-${total_batch_size}
+resumed_step: 0
+ckpt_path: ${callbacks.model_checkpoint.dirpath}/step=${step}.ckpt
+
+submission_file_name: test
+per_device_save_path: ${connected_dir}/sharded_results/${save_detail}-step=${step}
+logit_name: ${save_detail}-step=${step}
+pred_name: ${save_detail}-step=${step}
+submission_name: ${save_detail}-step=${step}
+
+user_name: ${oc.env:USER_NAME}
+upload_tag: VIPL-HR-V1
+model_detail: PhysFormer
+num_safetensors: 10
+
+run_name: ${project_name}
+work_dir: ${hydra:runtime.cwd}
