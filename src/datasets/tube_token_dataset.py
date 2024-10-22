@@ -197,7 +197,9 @@ class VIPLDataset(Dataset):
             image = cv2.imread(image_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             if image is None:
-                image = cv2.imread(self.root_dir + "p30/v1/source2/image_00737.png")
+                image = cv2.imread(
+                    self.data_path + "p30/v1/source2/mp_rgb_full/image_00736.png"
+                )
             image = cv2.resize(
                 image,
                 (
