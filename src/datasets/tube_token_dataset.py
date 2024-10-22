@@ -105,7 +105,7 @@ class VIPLDataset(Dataset):
         frame_rate = self.frame_rates[idx]
         bpm = self.bpms[idx]
         ecg_label = np.array(
-            self.labels[idx][:160],
+            self.labels[idx][: self.clip_frame_size],
         )
         return {
             "encoded": tube_token,
@@ -184,7 +184,7 @@ class VIPLDataset(Dataset):
                 3,
             ),
         )
-        crop_range = np.random.randint(16)
+        crop_range = np.random.randint(self.image_size // 8)
 
         for i in range(self.clip_frame_size):
             frame = start_frame + i
@@ -235,8 +235,16 @@ class VIPLDataset(Dataset):
                     )
             transforms.append(
                 A.Normalize(
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225],
+                    mean=[
+                        0.485,
+                        0.456,
+                        0.406,
+                    ],
+                    std=[
+                        0.229,
+                        0.224,
+                        0.225,
+                    ],
                 )
             )
             transforms.append(ToTensorV2())
@@ -244,8 +252,16 @@ class VIPLDataset(Dataset):
         else:
             transforms.append(
                 A.Normalize(
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225],
+                    mean=[
+                        0.485,
+                        0.456,
+                        0.406,
+                    ],
+                    std=[
+                        0.229,
+                        0.224,
+                        0.225,
+                    ],
                 )
             )
             transforms.append(ToTensorV2())
