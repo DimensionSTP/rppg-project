@@ -180,9 +180,9 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
         x = rearrange(
             x,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
-            D=depth_size,
-            H=self.feature_size,
-            W=self.feature_size,
+            depth=depth_size,
+            height=self.feature_size,
+            width=self.feature_size,
         )
         query, key, value = (
             self.query_projection(x),
@@ -301,9 +301,9 @@ class SpatioTemporalFeedForward(nn.Module):
         x = rearrange(
             x,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
-            D=depth_size,
-            H=self.feature_size,
-            W=self.feature_size,
+            depth=depth_size,
+            height=self.feature_size,
+            width=self.feature_size,
         )
         forwarded = self.feed_forward2(x)
         return forwarded
