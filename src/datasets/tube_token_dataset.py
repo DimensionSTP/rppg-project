@@ -76,6 +76,7 @@ class VIPLDataset(Dataset):
             images_path,
             start_frame,
         )
+        tube_token = tube_token / 255.0
         tube_token = rearrange(
             tube_token,
             "depth height width channel -> channel depth height width",
