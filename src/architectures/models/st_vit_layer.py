@@ -111,7 +111,7 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
         attention_dropout: float,
     ) -> None:
         super().__init__()
-        self.feature_size = feature_size  # 4
+        self.feature_size = feature_size
         projected_out = not (num_heads == 1)
         self.num_heads = num_heads
 
@@ -238,7 +238,7 @@ class SpatioTemporalFeedForward(nn.Module):
         feed_forward_dropout: float,
     ) -> None:
         super().__init__()
-        self.feature_size = feature_size  # 4
+        self.feature_size = feature_size
 
         self.feed_forward1 = nn.Sequential(
             nn.Conv3d(
