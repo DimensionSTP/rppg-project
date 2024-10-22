@@ -283,10 +283,10 @@ class SpatioTemporalFeedForward(nn.Module):
 
         self.feed_forward = nn.Sequential(
             self.feed_forward1,
-            nn.ELU(),
+            nn.ELU(inplace=True),
             nn.Dropout(feed_forward_dropout),
             self.spatio_temporal_conv,
-            nn.ELU(),
+            nn.ELU(inplace=True),
             nn.Dropout(feed_forward_dropout),
             self.feed_forward2,
             nn.Dropout(feed_forward_dropout),
