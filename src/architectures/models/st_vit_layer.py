@@ -97,7 +97,7 @@ class TemporalCenterDifferenceConvolution(nn.Module):
 class MultiHeadSelfTDCSGAttention(nn.Module):
     def __init__(
         self,
-        input_size: int,
+        feature_size: int,
         num_heads: int,
         model_dims: int,
         kernel_size: int,
@@ -111,7 +111,7 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
         attention_dropout: float,
     ) -> None:
         super().__init__()
-        self.input_size = input_size  # 4
+        self.feature_size = feature_size  # 4
         projected_out = not (num_heads == 1)
         self.num_heads = num_heads
 
@@ -175,13 +175,13 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
         sharp_gradient: float,
     ) -> torch.Tensor:
         patch_size = x.shape[1]
-        depth_size = patch_size // self.input_size**2
+        depth_size = patch_size // self.feature_size**2
         x = rearrange(
             x,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
             D=depth_size,
-            H=self.input_size,
-            W=self.input_size,
+            H=self.feature_size,
+            W=self.feature_size,
         )
         query, key, value = (
             self.query_projection(x),
@@ -232,13 +232,13 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
 class SpatioTemporalFeedForward(nn.Module):
     def __init__(
         self,
-        input_size: int,
+        feature_size: int,
         model_dims: int,
         feed_forward_dims: int,
         feed_forward_dropout: float,
     ) -> None:
         super().__init__()
-        self.input_size = input_size  # 4
+        self.feature_size = feature_size  # 4
 
         self.feed_forward1 = nn.Sequential(
             nn.Conv3d(
@@ -296,13 +296,13 @@ class SpatioTemporalFeedForward(nn.Module):
         x: torch.Tensor,
     ) -> torch.Tensor:
         patch_size = x.shape[1]
-        depth_size = patch_size // self.input_size**2
+        depth_size = patch_size // self.feature_size**2
         x = rearrange(
             x,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
             D=depth_size,
-            H=self.input_size,
-            W=self.input_size,
+            H=self.feature_size,
+            W=self.feature_size,
         )
         forwarded = self.feed_forward2(x)
         return forwarded
@@ -311,7 +311,7 @@ class SpatioTemporalFeedForward(nn.Module):
 class EncoderBlock(nn.Module):
     def __init__(
         self,
-        input_size: int,
+        feature_size: int,
         num_heads: int,
         model_dims: int,
         kernel_size: int,
@@ -329,7 +329,7 @@ class EncoderBlock(nn.Module):
         super().__init__()
         self.pre_attention_norm = nn.LayerNorm(model_dims)
         self.attention = MultiHeadSelfTDCSGAttention(
-            input_size=input_size,
+            feature_size=feature_size,
             num_heads=num_heads,
             model_dims=model_dims,
             kernel_size=kernel_size,
@@ -345,7 +345,7 @@ class EncoderBlock(nn.Module):
 
         self.pre_feed_forward_norm = nn.LayerNorm(model_dims)
         self.feed_forward = SpatioTemporalFeedForward(
-            input_size=input_size,
+            feature_size=feature_size,
             model_dims=model_dims,
             feed_forward_dims=feed_forward_dims,
             feed_forward_dropout=feed_forward_dropout,
@@ -372,7 +372,7 @@ class EncoderBlock(nn.Module):
 class PhysFormerEncoder(nn.Module):
     def __init__(
         self,
-        input_size: int,
+        feature_size: int,
         num_heads: int,
         model_dims: int,
         kernel_size: int,
@@ -390,7 +390,7 @@ class PhysFormerEncoder(nn.Module):
     ) -> None:
         super().__init__()
         layer = EncoderBlock(
-            input_size=input_size,
+            feature_size=feature_size,
             num_heads=num_heads,
             model_dims=model_dims,
             kernel_size=kernel_size,
