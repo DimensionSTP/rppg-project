@@ -108,16 +108,14 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
         bias: bool,
         theta: float,
         eps: float,
-        attn_dropout: float,
-        residual_dropout: float,
+        attention_dropout: float,
     ) -> None:
         super().__init__()
         self.input_size = input_size  # 4
+        projected_out = not (num_heads == 1)
         self.num_heads = num_heads
 
-        self.layer_norm = nn.LayerNorm(model_dims)
-
-        self.q_proj = nn.Sequential(
+        self.query_projection = nn.Sequential(
             TemporalCenterDifferenceConvolution(
                 in_channels=model_dims,
                 out_channels=model_dims,
@@ -132,7 +130,7 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
             ),
             nn.BatchNorm3d(model_dims),
         )
-        self.k_proj = nn.Sequential(
+        self.key_projection = nn.Sequential(
             TemporalCenterDifferenceConvolution(
                 in_channels=model_dims,
                 out_channels=model_dims,
@@ -147,7 +145,7 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
             ),
             nn.BatchNorm3d(model_dims),
         )
-        self.v_proj = nn.Sequential(
+        self.value_projection = nn.Sequential(
             nn.Conv3d(
                 in_channels=model_dims,
                 out_channels=model_dims,
@@ -159,16 +157,23 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
                 bias=bias,
             ),
         )
-
-        self.attn_dropout = nn.Dropout(attn_dropout)
-        self.residual_dropout = nn.Dropout(residual_dropout)
+        self.out_projection = (
+            nn.Sequential(
+                nn.Linear(
+                    model_dims,
+                    model_dims,
+                ),
+                nn.Dropout(attention_dropout),
+            )
+            if projected_out
+            else nn.Identity()
+        )
 
     def forward(
         self,
         x: torch.Tensor,
         sharp_gradient: float,
     ) -> torch.Tensor:
-        x = self.layer_norm(x)
         patch_size = x.shape[1]
         depth_size = patch_size // self.input_size**2
         x = rearrange(
@@ -178,49 +183,50 @@ class MultiHeadSelfTDCSGAttention(nn.Module):
             H=self.input_size,
             W=self.input_size,
         )
-        q, k, v = self.q_proj(x), self.k_proj(x), self.v_proj(x)
-        q, k, v = (
+        query, key, value = (
+            self.query_projection(x),
+            self.key_projection(x),
+            self.value_projection(x),
+        )
+        query, key, value = (
             rearrange(
                 i,
                 "batch_size channels depth height width -> batch_size (depth height width) channels",
             )
-            for i in [q, k, v]
+            for i in [query, key, value]
         )
-        q, k, v = (
+        query, key, value = (
             rearrange(
                 i,
                 "batch_size patches (num_heads head_dims) -> batch_size num_heads patches head_dims",
                 num_heads=self.num_heads,
             )
-            for i in [q, k, v]
+            for i in [query, key, value]
         )
 
-        attn_score = (
+        attention_score = (
             torch.einsum(
                 "batch_size num_heads patches head_dims, batch_size num_heads head_dims patches -> batch_size num_heads patches patches",
-                q,
-                k,
+                query,
+                key,
             )
             / sharp_gradient
         )
-        attn_score = self.attn_dropout(
-            F.softmax(
-                attn_score,
-                dim=-1,
-            )
+        attention_score = F.softmax(
+            attention_score,
+            dim=-1,
         )
 
-        attn = torch.einsum(
+        attention = torch.einsum(
             "batch_size num_heads patches patches, batch_size num_heads patches head_dims -> batch_size num_heads patches head_dims",
-            attn_score,
-            v,
+            attention_score,
+            value,
         )
-
-        attn = rearrange(
-            attn,
+        attention = rearrange(
+            attention,
             "batch_size num_heads patches head_dims -> batch_size patches (num_heads head_dims)",
         )
-        return q + self.residual_dropout(attn)
+        return self.out_projection(attention)
 
 
 class SpatioTemporalFeedForward(nn.Module):
@@ -230,12 +236,10 @@ class SpatioTemporalFeedForward(nn.Module):
         model_dims: int,
         feed_forward_dims: int,
         feed_forward_dropout: float,
-        residual_dropout: float,
     ) -> None:
         super().__init__()
         self.input_size = input_size  # 4
 
-        self.layer_norm = nn.LayerNorm(model_dims)
         self.feed_forward1 = nn.Sequential(
             nn.Conv3d(
                 in_channels=model_dims,
@@ -248,9 +252,7 @@ class SpatioTemporalFeedForward(nn.Module):
                 bias=False,
             ),
             nn.BatchNorm3d(feed_forward_dims),
-            nn.ELU(),
         )
-        self.feed_forward_dropout = nn.Dropout(feed_forward_dropout)
         self.spatio_temporal_conv = nn.Sequential(
             nn.Conv3d(
                 in_channels=feed_forward_dims,
@@ -263,7 +265,6 @@ class SpatioTemporalFeedForward(nn.Module):
                 bias=False,
             ),
             nn.BatchNorm3d(feed_forward_dims),
-            nn.ELU(),
         )
         self.feed_forward2 = nn.Sequential(
             nn.Conv3d(
@@ -278,13 +279,22 @@ class SpatioTemporalFeedForward(nn.Module):
             ),
             nn.BatchNorm3d(model_dims),
         )
-        self.residual_dropout = nn.Dropout(residual_dropout)
+
+        self.feed_forward = nn.Sequential(
+            self.feed_forward1,
+            nn.ELU(),
+            nn.Dropout(feed_forward_dropout),
+            self.spatio_temporal_conv,
+            nn.ELU(),
+            nn.Dropout(feed_forward_dropout),
+            self.feed_forward2,
+            nn.Dropout(feed_forward_dropout),
+        )
 
     def forward(
         self,
         x: torch.Tensor,
     ) -> torch.Tensor:
-        x = self.layer_norm(x)
         patch_size = x.shape[1]
         depth_size = patch_size // self.input_size**2
         x = rearrange(
@@ -294,15 +304,8 @@ class SpatioTemporalFeedForward(nn.Module):
             H=self.input_size,
             W=self.input_size,
         )
-        forwarded = self.feed_forward2(
-            self.spatio_temporal_conv(self.feed_forward_dropout(self.feed_forward1(x)))
-        )
-        residual = x + self.residual_dropout(forwarded)
-        residual = rearrange(
-            residual,
-            "batch_size channels depth height width -> batch_size (depth height width) channels",
-        )
-        return residual
+        forwarded = self.feed_forward2(x)
+        return forwarded
 
 
 class EncoderBlock(nn.Module):
@@ -319,13 +322,13 @@ class EncoderBlock(nn.Module):
         bias: bool,
         theta: float,
         eps: float,
-        attn_dropout: float,
+        attention_dropout: float,
         feed_forward_dims: int,
         feed_forward_dropout: float,
-        residual_dropout: float,
     ) -> None:
         super().__init__()
-        self.attn = MultiHeadSelfTDCSGAttention(
+        self.pre_attention_norm = nn.LayerNorm(model_dims)
+        self.attention = MultiHeadSelfTDCSGAttention(
             input_size=input_size,
             num_heads=num_heads,
             model_dims=model_dims,
@@ -337,27 +340,33 @@ class EncoderBlock(nn.Module):
             bias=bias,
             theta=theta,
             eps=eps,
-            attn_dropout=attn_dropout,
+            attention_dropout=attention_dropout,
         )
+
+        self.pre_feed_forward_norm = nn.LayerNorm(model_dims)
         self.feed_forward = SpatioTemporalFeedForward(
             input_size=input_size,
             model_dims=model_dims,
             feed_forward_dims=feed_forward_dims,
             feed_forward_dropout=feed_forward_dropout,
-            residual_dropout=residual_dropout,
         )
+
+        self.norm = nn.LayerNorm(model_dims)
 
     def forward(
         self,
         x: torch.Tensor,
         sharp_gradient: float,
     ) -> torch.Tensor:
-        x = self.attn(
-            x=x,
-            sharp_gradient=sharp_gradient,
+        x = (
+            self.attention(
+                x=self.pre_attention_norm(x),
+                sharp_gradient=sharp_gradient,
+            )
+            + x
         )
-        x = self.feed_forward(x)
-        return x
+        x = self.feed_forward(self.pre_feed_forward_norm(x)) + x
+        return self.norm(x)
 
 
 class PhysFormerEncoder(nn.Module):
@@ -374,10 +383,9 @@ class PhysFormerEncoder(nn.Module):
         bias: bool,
         theta: float,
         eps: float,
-        attn_dropout: float,
+        attention_dropout: float,
         feed_forward_dims: int,
         feed_forward_dropout: float,
-        residual_dropout: float,
         num_layers: int,
     ) -> None:
         super().__init__()
@@ -393,14 +401,13 @@ class PhysFormerEncoder(nn.Module):
             bias=bias,
             theta=theta,
             eps=eps,
-            attn_dropout=attn_dropout,
+            attention_dropout=attention_dropout,
             feed_forward_dims=feed_forward_dims,
             feed_forward_dropout=feed_forward_dropout,
-            residual_dropout=residual_dropout,
         )
         self.layers = self.get_clone(
-            module=layer,
-            iteration=num_layers,
+            layer=layer,
+            num_layers=num_layers,
         )
 
     def forward(
@@ -417,7 +424,7 @@ class PhysFormerEncoder(nn.Module):
 
     @staticmethod
     def get_clone(
-        module: nn.Module,
-        iteration: int,
+        layer: nn.Module,
+        num_layers: int,
     ) -> ModuleList:
-        return ModuleList([copy.deepcopy(module) for _ in range(iteration)])
+        return ModuleList([copy.deepcopy(layer) for _ in range(num_layers)])
