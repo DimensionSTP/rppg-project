@@ -175,8 +175,8 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
         self,
         x: torch.Tensor,
     ) -> torch.Tensor:
-        patch_size = x.shape[1]
-        depth_size = patch_size // self.feature_size**2
+        num_patches = x.shape[1]
+        depth_size = num_patches // self.feature_size**2
         x = rearrange(
             x,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
@@ -296,8 +296,8 @@ class SpatioTemporalFeedForward(nn.Module):
         self,
         x: torch.Tensor,
     ) -> torch.Tensor:
-        patch_size = x.shape[1]
-        depth_size = patch_size // self.feature_size**2
+        num_patches = x.shape[1]
+        depth_size = num_patches // self.feature_size**2
         x = rearrange(
             x,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
