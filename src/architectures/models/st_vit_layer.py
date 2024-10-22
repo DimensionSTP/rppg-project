@@ -98,6 +98,7 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
     def __init__(
         self,
         feature_size: int,
+        sharp_gradient: float,
         num_heads: int,
         model_dims: int,
         tcdc_kernel_size: int,
@@ -112,6 +113,7 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
     ) -> None:
         super().__init__()
         self.feature_size = feature_size
+        self.sharp_gradient = sharp_gradient
         projected_out = not (num_heads == 1)
         self.num_heads = num_heads
 
@@ -172,7 +174,6 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        sharp_gradient: float,
     ) -> torch.Tensor:
         patch_size = x.shape[1]
         depth_size = patch_size // self.feature_size**2
@@ -210,7 +211,7 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
                 query,
                 key,
             )
-            / sharp_gradient
+            / self.sharp_gradient
         )
         attention_score = F.softmax(
             attention_score,
@@ -312,6 +313,7 @@ class EncoderBlock(nn.Module):
     def __init__(
         self,
         feature_size: int,
+        sharp_gradient: float,
         num_heads: int,
         model_dims: int,
         tcdc_kernel_size: int,
@@ -330,6 +332,7 @@ class EncoderBlock(nn.Module):
         self.pre_attention_norm = nn.LayerNorm(model_dims)
         self.attention = MultiHeadTCDCSelfSGAttention(
             feature_size=feature_size,
+            sharp_gradient=sharp_gradient,
             num_heads=num_heads,
             model_dims=model_dims,
             tcdc_kernel_size=tcdc_kernel_size,
@@ -356,15 +359,8 @@ class EncoderBlock(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        sharp_gradient: float,
     ) -> torch.Tensor:
-        x = (
-            self.attention(
-                x=self.pre_attention_norm(x),
-                sharp_gradient=sharp_gradient,
-            )
-            + x
-        )
+        x = self.attention(x=self.pre_attention_norm(x)) + x
         x = self.feed_forward(self.pre_feed_forward_norm(x)) + x
         return self.norm(x)
 
@@ -373,6 +369,7 @@ class PhysFormerEncoder(nn.Module):
     def __init__(
         self,
         feature_size: int,
+        sharp_gradient: float,
         num_heads: int,
         model_dims: int,
         tcdc_kernel_size: int,
@@ -391,6 +388,7 @@ class PhysFormerEncoder(nn.Module):
         super().__init__()
         layer = EncoderBlock(
             feature_size=feature_size,
+            sharp_gradient=sharp_gradient,
             num_heads=num_heads,
             model_dims=model_dims,
             tcdc_kernel_size=tcdc_kernel_size,
@@ -413,13 +411,9 @@ class PhysFormerEncoder(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        sharp_gradient: float,
     ) -> torch.Tensor:
         for layer in self.layers:
-            x = layer(
-                x=x,
-                sharp_gradient=sharp_gradient,
-            )
+            x = layer(x=x)
         return x
 
     @staticmethod
