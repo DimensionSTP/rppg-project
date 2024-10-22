@@ -1,182 +1,430 @@
-from typing import Dict, Any, List
+import math
+import copy
+
+from einops import reduce, rearrange
 
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.nn import ModuleList
 
 
-class PatchEmbedding(nn.Module):
+class TemporalCenterDifferenceConvolution(nn.Module):
     def __init__(
         self,
-        img_size,
-        patch_size,
-        in_chans,
-        embed_dim,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int = 3,
+        stride: int = 1,
+        padding: int = 1,
+        dilation: int = 1,
+        groups: int = 1,
+        bias: bool = False,
+        theta: float = 0.6,
+        eps: float = 1e-8,
     ) -> None:
         super().__init__()
-        self.img_size = img_size
-        self.patch_size = patch_size
-        self.in_chans = in_chans
-        self.embed_dim = embed_dim
-        self.num_patches = (img_size // patch_size) ** 2
-        self.proj = nn.Conv2d(
-            in_chans, embed_dim, kernel_size=patch_size, stride=patch_size
+        self.conv = nn.Conv3d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
         )
+        self.theta = theta
+        self.eps = eps
 
     def forward(
         self,
-        x,
+        x: torch.Tensor,
     ) -> torch.Tensor:
-        B, C, H, W = x.shape
-        x = self.proj(x).flatten(2).transpose(1, 2)
-        return x
+        out_normal = self.conv(x)
+
+        if math.fabs(self.theta - 0.0) < self.eps:
+            return out_normal
+        else:
+            depth = self.conv.weight.shape[2]
+            if depth > 1:
+                kernel_0 = reduce(
+                    self.conv.weight[
+                        :,
+                        :,
+                        0,
+                        :,
+                        :,
+                    ],
+                    "out_channels in_channels_per_group height_kernel_size width_kernel_size -> out_channels in_channels_per_group",
+                    "sum",
+                )
+                kernel_2 = reduce(
+                    self.conv.weight[
+                        :,
+                        :,
+                        -1,
+                        :,
+                        :,
+                    ],
+                    "out_channels in_channels_per_group height_kernel_size width_kernel_size -> out_channels in_channels_per_group",
+                    "sum",
+                )
+
+                kernel_diff = kernel_0 + kernel_2
+                kernel_diff = kernel_diff[
+                    :,
+                    :,
+                    None,
+                    None,
+                    None,
+                ]
+
+                out_diff = F.conv3d(
+                    input=x,
+                    weight=kernel_diff,
+                    bias=self.conv.bias,
+                    stride=self.conv.stride,
+                    padding=0,
+                    dilation=self.conv.dilation,
+                    groups=self.conv.groups,
+                )
+                return out_normal - self.theta * out_diff
+            else:
+                return out_normal
 
 
-class MultiHeadSelfAttention(nn.Module):
+class MultiHeadSelfTDCSGAttention(nn.Module):
     def __init__(
         self,
-        embed_dim,
-        num_heads,
+        input_size: int,
+        num_heads: int,
+        model_dims: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+        groups: int,
+        bias: bool,
+        theta: float,
+        eps: float,
+        attention_dropout: float,
     ) -> None:
         super().__init__()
+        self.input_size = input_size  # 4
+        projected_out = not (num_heads == 1)
         self.num_heads = num_heads
-        self.embed_dim = embed_dim
-        self.head_dim = embed_dim // num_heads
-        self.scaling = self.head_dim**-0.5
 
-        self.qkv = nn.Linear(embed_dim, embed_dim * 3)
-        self.attn_drop = nn.Dropout(0.1)
-        self.proj = nn.Linear(embed_dim, embed_dim)
-        self.proj_drop = nn.Dropout(0.1)
+        self.query_projection = nn.Sequential(
+            TemporalCenterDifferenceConvolution(
+                in_channels=model_dims,
+                out_channels=model_dims,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                dilation=dilation,
+                groups=groups,
+                bias=bias,
+                theta=theta,
+                eps=eps,
+            ),
+            nn.BatchNorm3d(model_dims),
+        )
+        self.key_projection = nn.Sequential(
+            TemporalCenterDifferenceConvolution(
+                in_channels=model_dims,
+                out_channels=model_dims,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=padding,
+                dilation=dilation,
+                groups=groups,
+                bias=bias,
+                theta=theta,
+                eps=eps,
+            ),
+            nn.BatchNorm3d(model_dims),
+        )
+        self.value_projection = nn.Sequential(
+            nn.Conv3d(
+                in_channels=model_dims,
+                out_channels=model_dims,
+                kernel_size=1,
+                stride=stride,
+                padding=0,
+                dilation=dilation,
+                groups=groups,
+                bias=bias,
+            ),
+        )
+        self.out_projection = (
+            nn.Sequential(
+                nn.Linear(
+                    model_dims,
+                    model_dims,
+                ),
+                nn.Dropout(attention_dropout),
+            )
+            if projected_out
+            else nn.Identity()
+        )
 
     def forward(
         self,
-        x,
+        x: torch.Tensor,
+        sharp_gradient: float,
     ) -> torch.Tensor:
-        B, N, C = x.shape
-        qkv = (
-            self.qkv(x)
-            .reshape(B, N, 3, self.num_heads, self.head_dim)
-            .permute(2, 0, 3, 1, 4)
+        patch_size = x.shape[1]
+        depth_size = patch_size // self.input_size**2
+        x = rearrange(
+            x,
+            "batch_size (depth height width) channels -> batch_size channels depth height width",
+            D=depth_size,
+            H=self.input_size,
+            W=self.input_size,
         )
-        q, k, v = qkv[0], qkv[1], qkv[2]
+        query, key, value = (
+            self.query_projection(x),
+            self.key_projection(x),
+            self.value_projection(x),
+        )
+        query, key, value = (
+            rearrange(
+                i,
+                "batch_size channels depth height width -> batch_size (depth height width) channels",
+            )
+            for i in [query, key, value]
+        )
+        query, key, value = (
+            rearrange(
+                i,
+                "batch_size patches (num_heads head_dims) -> batch_size num_heads patches head_dims",
+                num_heads=self.num_heads,
+            )
+            for i in [query, key, value]
+        )
 
-        attn_scores = (q @ k.transpose(-2, -1)) * self.scaling
-        attn_scores = attn_scores.softmax(dim=-1)
-        attn_scores = self.attn_drop(attn_scores)
+        attention_score = (
+            torch.einsum(
+                "batch_size num_heads patches head_dims, batch_size num_heads head_dims patches -> batch_size num_heads patches patches",
+                query,
+                key,
+            )
+            / sharp_gradient
+        )
+        attention_score = F.softmax(
+            attention_score,
+            dim=-1,
+        )
 
-        out = (attn_scores @ v).transpose(1, 2).reshape(B, N, C)
-        out = self.proj(out)
-        out = self.proj_drop(out)
-        return out
+        attention = torch.einsum(
+            "batch_size num_heads patches patches, batch_size num_heads patches head_dims -> batch_size num_heads patches head_dims",
+            attention_score,
+            value,
+        )
+        attention = rearrange(
+            attention,
+            "batch_size num_heads patches head_dims -> batch_size patches (num_heads head_dims)",
+        )
+        return self.out_projection(attention)
 
 
-class FeedForward(nn.Module):
+class SpatioTemporalFeedForward(nn.Module):
     def __init__(
         self,
-        embed_dim,
-        ff_dim,
+        input_size: int,
+        model_dims: int,
+        feed_forward_dims: int,
+        feed_forward_dropout: float,
     ) -> None:
         super().__init__()
-        self.fc1 = nn.Linear(embed_dim, ff_dim)
-        self.fc2 = nn.Linear(ff_dim, embed_dim)
-        self.act = nn.GELU()
-        self.dropout = nn.Dropout(0.1)
+        self.input_size = input_size  # 4
+
+        self.feed_forward1 = nn.Sequential(
+            nn.Conv3d(
+                in_channels=model_dims,
+                out_channels=feed_forward_dims,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                dilation=1,
+                groups=1,
+                bias=False,
+            ),
+            nn.BatchNorm3d(feed_forward_dims),
+        )
+        self.spatio_temporal_conv = nn.Sequential(
+            nn.Conv3d(
+                in_channels=feed_forward_dims,
+                out_channels=feed_forward_dims,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                dilation=1,
+                groups=feed_forward_dims,
+                bias=False,
+            ),
+            nn.BatchNorm3d(feed_forward_dims),
+        )
+        self.feed_forward2 = nn.Sequential(
+            nn.Conv3d(
+                in_channels=feed_forward_dims,
+                out_channels=model_dims,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                dilation=1,
+                groups=1,
+                bias=False,
+            ),
+            nn.BatchNorm3d(model_dims),
+        )
+
+        self.feed_forward = nn.Sequential(
+            self.feed_forward1,
+            nn.ELU(),
+            nn.Dropout(feed_forward_dropout),
+            self.spatio_temporal_conv,
+            nn.ELU(),
+            nn.Dropout(feed_forward_dropout),
+            self.feed_forward2,
+            nn.Dropout(feed_forward_dropout),
+        )
 
     def forward(
         self,
-        x,
+        x: torch.Tensor,
     ) -> torch.Tensor:
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        x = self.dropout(x)
+        patch_size = x.shape[1]
+        depth_size = patch_size // self.input_size**2
+        x = rearrange(
+            x,
+            "batch_size (depth height width) channels -> batch_size channels depth height width",
+            D=depth_size,
+            H=self.input_size,
+            W=self.input_size,
+        )
+        forwarded = self.feed_forward2(x)
+        return forwarded
+
+
+class EncoderBlock(nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        num_heads: int,
+        model_dims: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+        groups: int,
+        bias: bool,
+        theta: float,
+        eps: float,
+        attention_dropout: float,
+        feed_forward_dims: int,
+        feed_forward_dropout: float,
+    ) -> None:
+        super().__init__()
+        self.pre_attention_norm = nn.LayerNorm(model_dims)
+        self.attention = MultiHeadSelfTDCSGAttention(
+            input_size=input_size,
+            num_heads=num_heads,
+            model_dims=model_dims,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            theta=theta,
+            eps=eps,
+            attention_dropout=attention_dropout,
+        )
+
+        self.pre_feed_forward_norm = nn.LayerNorm(model_dims)
+        self.feed_forward = SpatioTemporalFeedForward(
+            input_size=input_size,
+            model_dims=model_dims,
+            feed_forward_dims=feed_forward_dims,
+            feed_forward_dropout=feed_forward_dropout,
+        )
+
+        self.norm = nn.LayerNorm(model_dims)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        sharp_gradient: float,
+    ) -> torch.Tensor:
+        x = (
+            self.attention(
+                x=self.pre_attention_norm(x),
+                sharp_gradient=sharp_gradient,
+            )
+            + x
+        )
+        x = self.feed_forward(self.pre_feed_forward_norm(x)) + x
+        return self.norm(x)
+
+
+class PhysFormerEncoder(nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        num_heads: int,
+        model_dims: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+        groups: int,
+        bias: bool,
+        theta: float,
+        eps: float,
+        attention_dropout: float,
+        feed_forward_dims: int,
+        feed_forward_dropout: float,
+        num_layers: int,
+    ) -> None:
+        super().__init__()
+        layer = EncoderBlock(
+            input_size=input_size,
+            num_heads=num_heads,
+            model_dims=model_dims,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+            bias=bias,
+            theta=theta,
+            eps=eps,
+            attention_dropout=attention_dropout,
+            feed_forward_dims=feed_forward_dims,
+            feed_forward_dropout=feed_forward_dropout,
+        )
+        self.layers = self.get_clone(
+            layer=layer,
+            num_layers=num_layers,
+        )
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        sharp_gradient: float,
+    ) -> torch.Tensor:
+        for layer in self.layers:
+            x = layer(
+                x=x,
+                sharp_gradient=sharp_gradient,
+            )
         return x
 
-
-class TransformerEncoderLayer(nn.Module):
-    def __init__(
-        self,
-        embed_dim,
-        num_heads,
-        ff_dim,
-    ) -> None:
-        super().__init__()
-        self.attn = MultiHeadSelfAttention(embed_dim, num_heads)
-        self.ffn = FeedForward(embed_dim, ff_dim)
-        self.norm1 = nn.LayerNorm(embed_dim)
-        self.norm2 = nn.LayerNorm(embed_dim)
-        self.dropout = nn.Dropout(0.1)
-
-    def forward(
-        self,
-        x,
-    ) -> torch.Tensor:
-        attn_out = self.attn(self.norm1(x))
-        x = x + self.dropout(attn_out)
-        ffn_out = self.ffn(self.norm2(x))
-        x = x + self.dropout(ffn_out)
-        return x
-
-
-class TemporalDifferenceConvolution(nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-    ) -> None:
-        super().__init__()
-        self.tdc = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
-
-    def forward(
-        self,
-        x,
-    ) -> torch.Tensor:
-        B, C, T, H, W = x.shape
-        x_diff = x[:, :, 1:, :, :] - x[:, :, :-1, :, :]
-        x_diff = F.pad(x_diff, (0, 0, 0, 0, 0, 0, 1, 0))
-        x_diff = self.tdc(x_diff)
-        return x_diff
-
-
-class PhysFormerModel(nn.Module):
-    def __init__(
-        self,
-        img_size,
-        patch_size,
-        in_chans,
-        embed_dim,
-        num_layers,
-        num_heads,
-        ff_dim,
-    ) -> None:
-        super().__init__()
-        self.patch_embed = PatchEmbedding(img_size, patch_size, in_chans, embed_dim)
-        self.encoder_layers = nn.ModuleList(
-            [
-                TransformerEncoderLayer(embed_dim, num_heads, ff_dim)
-                for _ in range(num_layers)
-            ]
-        )
-        self.tdc = TemporalDifferenceConvolution(
-            embed_dim, embed_dim, kernel_size=3, padding=1
-        )
-        self.ffn = FeedForward(embed_dim, ff_dim)
-        self.output_layer = nn.Linear(embed_dim, 1)  # rPPG prediction
-
-    def forward(
-        self,
-        x,
-    ) -> torch.Tensor:
-        x = self.patch_embed(x)
-        for layer in self.encoder_layers:
-            x = layer(x)
-        x = x.permute(0, 2, 1).unsqueeze(2)  # B, C, 1, T, P -> B, C, T, 1, P
-        x = self.tdc(x).squeeze(2)
-        x = self.ffn(x)
-        x = self.output_layer(x)
-        return x
+    @staticmethod
+    def get_clone(
+        layer: nn.Module,
+        num_layers: int,
+    ) -> ModuleList:
+        return ModuleList([copy.deepcopy(layer) for _ in range(num_layers)])
