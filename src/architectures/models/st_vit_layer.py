@@ -94,7 +94,7 @@ class TemporalCenterDifferenceConvolution(nn.Module):
                 return out_normal
 
 
-class MultiHeadSelfTDCSGAttention(nn.Module):
+class MultiHeadTCDCSelfSGAttention(nn.Module):
     def __init__(
         self,
         feature_size: int,
@@ -328,7 +328,7 @@ class EncoderBlock(nn.Module):
     ) -> None:
         super().__init__()
         self.pre_attention_norm = nn.LayerNorm(model_dims)
-        self.attention = MultiHeadSelfTDCSGAttention(
+        self.attention = MultiHeadTCDCSelfSGAttention(
             feature_size=feature_size,
             num_heads=num_heads,
             model_dims=model_dims,
