@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 import cv2
 from einops import rearrange
 
+import torch
 from torch.utils.data import Dataset
 
 import albumentations as A
@@ -102,11 +103,26 @@ class VIPLDataset(Dataset):
                 image=slice,
             )["image"]
             transformed_slices.append(transformed_slice)
+        transformed_tube_token = torch.stack(
+            transformed_slices,
+            dim=0,
+        )
+        transformed_tube_token = rearrange(
+            transformed_tube_token,
+            "depth channel height width -> channel depth height width",
+        )
 
-        frame_rate = self.frame_rates[idx]
-        bpm = self.bpms[idx]
-        ecg_label = np.array(
+        frame_rate = torch.tensor(
+            self.frame_rates[idx],
+            dtype=torch.float32,
+        )
+        bpm = torch.tensor(
+            self.bpms[idx],
+            dtype=torch.float32,
+        )
+        ecg_label = torch.tensor(
             self.labels[idx][: self.clip_frame_size],
+            dtype=torch.float32,
         )
         return {
             "encoded": tube_token,
