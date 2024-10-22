@@ -9,6 +9,9 @@ from einops import rearrange
 
 from torch.utils.data import Dataset
 
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+
 
 class VIPLDataset(Dataset):
     def __init__(
@@ -27,6 +30,8 @@ class VIPLDataset(Dataset):
         batch_size: int,
         clip_frame_size: int,
         image_size: int,
+        augmentation_probability: float,
+        augmentations: List[str],
     ) -> None:
         super().__init__()
         self.data_path = data_path
@@ -41,6 +46,8 @@ class VIPLDataset(Dataset):
         self.ecg_column_name = ecg_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
+        self.augmentation_probability = augmentation_probability
+        self.augmentations = augmentations
         metadata = self.get_metadata()
         self.file_paths = metadata["file_paths"]
         self.frame_idices = metadata["frame_idices"]
@@ -49,6 +56,7 @@ class VIPLDataset(Dataset):
         self.labels = metadata["labels"]
         self.clip_frame_size = clip_frame_size
         self.image_size = image_size
+        self.transform = self.get_transform()
 
     def __len__(self) -> int:
         return len(self.bpms)
@@ -68,11 +76,32 @@ class VIPLDataset(Dataset):
             images_path,
             start_frame,
         )
-        tube_token = (tube_token - 127.5) / 128
         tube_token = rearrange(
             tube_token,
             "depth height width channel -> channel depth height width",
         )
+
+        first_slice = tube_token[
+            :,
+            0,
+            :,
+            :,
+        ]
+        transformed = self.transform(image=first_slice)
+        transformed_slices = []
+        for depth in range(self.clip_frame_size):
+            slice = tube_token[
+                :,
+                depth,
+                :,
+                :,
+            ]
+            transformed_slice = A.ReplayCompose.replay(
+                transformed["replay"],
+                image=slice,
+            )["image"]
+            transformed_slices.append(transformed_slice)
+
         frame_rate = self.frame_rates[idx]
         bpm = self.bpms[idx]
         ecg_label = np.array(
@@ -187,3 +216,37 @@ class VIPLDataset(Dataset):
                 :,
             ] = image
         return tube_token
+
+    def get_transform(self) -> A.Compose:
+        transforms = [A.Resize(self.image_size, self.image_size)]
+        if self.split == "train":
+            for aug in self.augmentations:
+                if aug == "hflip":
+                    transforms.append(
+                        A.HorizontalFlip(
+                            p=self.augmentation_probability,
+                        )
+                    )
+                elif aug == "vflip":
+                    transforms.append(
+                        A.VerticalFlip(
+                            p=self.augmentation_probability,
+                        )
+                    )
+            transforms.append(
+                A.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                )
+            )
+            transforms.append(ToTensorV2())
+            return A.Compose(transforms)
+        else:
+            transforms.append(
+                A.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225],
+                )
+            )
+            transforms.append(ToTensorV2())
+            return A.Compose(transforms)
