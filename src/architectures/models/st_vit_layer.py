@@ -219,7 +219,7 @@ class MultiHeadTCDCSelfSGAttention(nn.Module):
         )
 
         attention = torch.einsum(
-            "batch_size num_heads patches patches, batch_size num_heads patches head_dims -> batch_size num_heads patches head_dims",
+            "batches heads patches patches, batches heads patches hdims -> batches heads patches hdims",
             attention_score,
             value,
         )
