@@ -121,7 +121,7 @@ class VIPLDataset(Dataset):
             dtype=torch.float32,
         )
         return {
-            "encoded": tube_token,
+            "encoded": transformed_tube_token,
             self.frame_rate_column_name: frame_rate,
             self.bpm_column_name: bpm,
             "label": ecg_label,
