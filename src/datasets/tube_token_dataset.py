@@ -78,14 +78,10 @@ class VIPLDataset(Dataset):
             start_frame,
         )
         tube_token = tube_token / 255.0
-        tube_token = rearrange(
-            tube_token,
-            "depth height width channel -> channel depth height width",
-        )
 
         first_slice = tube_token[
-            :,
             0,
+            :,
             :,
             :,
         ]
@@ -93,7 +89,6 @@ class VIPLDataset(Dataset):
         transformed_slices = []
         for depth in range(self.clip_frame_size):
             slice = tube_token[
-                :,
                 depth,
                 :,
                 :,
