@@ -306,6 +306,10 @@ class SpatioTemporalFeedForward(nn.Module):
             width=self.feature_size,
         )
         forwarded = self.feed_forward(x)
+        forwarded = rearrange(
+            forwarded,
+            "batch_size channels depth height width -> batch_size (depth height width) channels",
+        )
         return forwarded
 
 
