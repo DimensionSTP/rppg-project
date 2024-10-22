@@ -92,6 +92,7 @@ class VIPLDataset(Dataset):
                 depth,
                 :,
                 :,
+                :,
             ]
             transformed_slice = A.ReplayCompose.replay(
                 transformed["replay"],
