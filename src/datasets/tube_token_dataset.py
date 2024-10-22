@@ -26,6 +26,7 @@ class VIPLDataset(Dataset):
         num_devices: int,
         batch_size: int,
         clip_frame_size: int,
+        image_size: int,
     ) -> None:
         super().__init__()
         self.data_path = data_path
@@ -47,6 +48,7 @@ class VIPLDataset(Dataset):
         self.bpms = metadata["bpms"]
         self.labels = metadata["labels"]
         self.clip_frame_size = clip_frame_size
+        self.image_size = image_size
 
     def __len__(self) -> int:
         return len(self.bpms)
@@ -148,8 +150,8 @@ class VIPLDataset(Dataset):
         tube_token = np.zeros(
             (
                 self.clip_frame_size,
-                128,
-                128,
+                self.image_size,
+                self.image_size,
                 3,
             ),
         )
@@ -169,13 +171,13 @@ class VIPLDataset(Dataset):
             image = cv2.resize(
                 image,
                 (
-                    128 + crop_range,
-                    128 + crop_range,
+                    self.image_size + crop_range,
+                    self.image_size + crop_range,
                 ),
                 interpolation=cv2.INTER_CUBIC,
             )[
-                (crop_range // 2) : (128 + crop_range // 2),
-                (crop_range // 2) : (128 + crop_range // 2),
+                (crop_range // 2) : (self.image_size + crop_range // 2),
+                (crop_range // 2) : (self.image_size + crop_range // 2),
                 :,
             ]
             tube_token[
