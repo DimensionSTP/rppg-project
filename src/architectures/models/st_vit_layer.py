@@ -305,7 +305,7 @@ class SpatioTemporalFeedForward(nn.Module):
             height=self.feature_size,
             width=self.feature_size,
         )
-        forwarded = self.feed_forward2(x)
+        forwarded = self.feed_forward(x)
         return forwarded
 
 
