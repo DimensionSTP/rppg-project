@@ -217,7 +217,7 @@ class VIPLDataset(Dataset):
             ] = image
         return tube_token
 
-    def get_transform(self) -> A.Compose:
+    def get_transform(self) -> A.ReplayCompose:
         transforms = [A.Resize(self.image_size, self.image_size)]
         if self.split == "train":
             for aug in self.augmentations:
@@ -248,7 +248,7 @@ class VIPLDataset(Dataset):
                 )
             )
             transforms.append(ToTensorV2())
-            return A.Compose(transforms)
+            return A.ReplayCompose(transforms)
         else:
             transforms.append(
                 A.Normalize(
@@ -265,4 +265,4 @@ class VIPLDataset(Dataset):
                 )
             )
             transforms.append(ToTensorV2())
-            return A.Compose(transforms)
+            return A.ReplayCompose(transforms)
