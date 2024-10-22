@@ -14,14 +14,14 @@ class TemporalCenterDifferenceConvolution(nn.Module):
         self,
         in_channels: int,
         out_channels: int,
-        tcdc_kernel_size: int = 3,
-        stride: int = 1,
-        padding: int = 1,
-        dilation: int = 1,
-        groups: int = 1,
-        bias: bool = False,
-        theta: float = 0.6,
-        eps: float = 1e-8,
+        tcdc_kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+        groups: int,
+        bias: bool,
+        theta: float,
+        eps: float,
     ) -> None:
         super().__init__()
         self.conv = nn.Conv3d(
