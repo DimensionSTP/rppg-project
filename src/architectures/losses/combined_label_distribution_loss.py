@@ -15,7 +15,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         pred: torch.Tensor,
         target: torch.Tensor,
         bpm: torch.Tensor,
-        min_bpm: int = 40,
+        min_bpm: int = 42,
         max_bpm: int = 180,
         std: float = 1.0,
         frame_rate: torch.Tensor = 30.0,
