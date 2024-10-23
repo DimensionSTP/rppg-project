@@ -12,35 +12,62 @@ class CombinedLabelDistributionLoss(nn.Module):
         super().__init__()
 
     @staticmethod
-    def normal_distribution(mean, label_k, std):
-        return math.exp(-((label_k - mean) ** 2) / (2 * std**2)) / (
-            math.sqrt(2 * math.pi) * std
+    def normal_distribution(
+        bpm,
+        min_bpm,
+        max_bpm,
+        std,
+    ):
+        scaled_bpm = bpm - min_bpm
+        range_size = max_bpm - min_bpm
+        bpm_range = torch.arange(0, range_size).float().unsqueeze(0)
+        diff = bpm_range - scaled_bpm
+        exponent = -(diff**2) / (2 * std**2)
+        normal_distribution = torch.exp(exponent) / (
+            torch.sqrt(2 * torch.tensor(math.pi)) * std
         )
+        normal_distribution = torch.clamp(normal_distribution, min=1e-15)
+        return {
+            "normal_distribution": normal_distribution,
+            "bpm_range": bpm_range,
+        }
 
     @staticmethod
-    def kl_divergence_loss(predictions, targets):
+    def kl_divergence_loss(
+        pred: torch.Tensor,
+        target: torch.Tensor,
+    ) -> torch.Tensor:
         criterion = nn.KLDivLoss(reduction="batchmean")
-        log_predictions = torch.log(predictions)
-        loss = criterion(log_predictions, targets)
+        log_pred = torch.log(pred)
+        loss = criterion(log_pred, target)
         return loss
 
-    def negative_pearson_loss(self, predictions, targets):
-        loss = 0
-        for i in range(predictions.shape[0]):
-            sum_x = torch.sum(predictions[i])
-            sum_y = torch.sum(targets[i])
-            sum_xy = torch.sum(predictions[i] * targets[i])
-            sum_x2 = torch.sum(torch.pow(predictions[i], 2))
-            sum_y2 = torch.sum(torch.pow(targets[i], 2))
-            N = predictions.shape[1]
-            pearson_correlation = (N * sum_xy - sum_x * sum_y) / (
-                torch.sqrt(
-                    (N * sum_x2 - torch.pow(sum_x, 2))
-                    * (N * sum_y2 - torch.pow(sum_y, 2))
-                )
-            )
-            loss += 1 - pearson_correlation
-        return loss / predictions.shape[0]
+    def negative_pearson_loss(
+        self,
+        pred: torch.Tensor,
+        target: torch.Tensor,
+    ) -> torch.Tensor:
+        pred_mean = pred.mean(
+            dim=1,
+            keepdim=True,
+        )
+        target_mean = target.mean(
+            dim=1,
+            keepdim=True,
+        )
+
+        pred_centered = pred - pred_mean
+        target_centered = target - target_mean
+
+        pred_std = pred_centered.pow(2).sum(dim=1).sqrt()
+        target_std = target_centered.pow(2).sum(dim=1).sqrt()
+
+        covariance = (pred_centered * target_centered).sum(dim=1)
+
+        pearson_correlation = covariance / (pred_std * target_std)
+
+        loss = 1 - pearson_correlation
+        return loss.mean()
 
     def compute_complex_absolute_given_k(self, output, k, N):
         two_pi_n_over_N = (
@@ -78,50 +105,71 @@ class CombinedLabelDistributionLoss(nn.Module):
         complex_absolute = self.compute_complex_absolute_given_k(output, k, N)
         return (1.0 / complex_absolute.sum()) * complex_absolute
 
-    def compute_combined_loss(self, predictions, target, sampling_rate, std):
-        target_distribution = [
-            self.normal_distribution(int(target), i, std) for i in range(140)
-        ]
-        target_distribution = [i if i > 1e-15 else 1e-15 for i in target_distribution]
-        target_distribution = torch.Tensor(target_distribution).cuda()
+    def compute_combined_loss(
+        self,
+        predictions,
+        bpm,
+        min_bpm,
+        max_bpm,
+        std,
+        frame_rate,
+    ):
+        distribution_outputs = self.normal_distribution(
+            bpm,
+            min_bpm,
+            max_bpm,
+            std,
+        )
+        bpm_distribution = distribution_outputs["normal_distribution"]
+        bpm_range = distribution_outputs["bpm_range"]
 
         predictions = predictions.view(1, -1)
-        target = target.view(1, -1)
+        bpm = bpm.view(1, -1)
 
-        bpm_range = torch.arange(40, 180, dtype=torch.float).cuda()
         complex_absolute = self.compute_complex_absolute(
-            predictions, sampling_rate, bpm_range
+            predictions, frame_rate, bpm_range
         )
         frequency_distribution = F.softmax(complex_absolute.view(-1), dim=0)
-        loss_kl = self.kl_divergence_loss(frequency_distribution, target_distribution)
+        kl_loss = self.kl_divergence_loss(frequency_distribution, bpm_distribution)
 
         whole_max_val, whole_max_idx = complex_absolute.view(-1).max(0)
         whole_max_idx = whole_max_idx.type(torch.float)
 
         return (
-            loss_kl,
-            F.cross_entropy(complex_absolute, target.view((1)).type(torch.long)),
-            torch.abs(target[0] - whole_max_idx),
+            kl_loss,
+            F.cross_entropy(complex_absolute, bpm.view((1)).type(torch.long)),
+            torch.abs(bpm[0] - whole_max_idx),
         )
 
-    def forward(self, predictions, targets, avg_hr, frame_rate, a, b, std=1.0):
+    def forward(
+        self,
+        predictions,
+        targets,
+        bpm,
+        min_bpm=40,
+        max_bpm=179,
+        std=1.0,
+        frame_rate=30.0,
+        alpha=0.05,
+        beta=5.0,
+    ):
         # Normalizing predictions
         predictions = (
             predictions - torch.mean(predictions, dim=-1, keepdim=True)
         ) / torch.std(predictions, dim=-1, keepdim=True)
 
-        # Calculate Negative Pearson Loss
-        loss_rPPG = self.negative_pearson_loss(predictions, targets)
-
-        # Adjust avg_hr
-        avg_hr = avg_hr - 40
+        rppg_loss = self.negative_pearson_loss(predictions, targets)
 
         # Calculate combined loss
-        loss_kl, loss_freq_ce, mae_hr = self.compute_combined_loss(
-            predictions, avg_hr, frame_rate, std
+        kl_loss, freq_ce_loss, bpm_mae = self.compute_combined_loss(
+            predictions,
+            bpm,
+            min_bpm,
+            max_bpm,
+            std,
+            frame_rate,
         )
 
-        # Calculate total loss
-        total_loss = a * loss_rPPG + b * (loss_freq_ce + loss_kl)
+        total_loss = alpha * rppg_loss + beta * (freq_ce_loss + kl_loss)
 
-        return total_loss, loss_rPPG, loss_kl, loss_freq_ce, mae_hr
+        return total_loss, rppg_loss, kl_loss, freq_ce_loss, bpm_mae
