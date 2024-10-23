@@ -116,7 +116,7 @@ class CombinedLabelDistributionLoss(nn.Module):
             input=log_pred,
             target=target,
         )
-        return loss
+        return loss.mean()
 
     def negative_pearson_loss(
         self,
