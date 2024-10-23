@@ -1,3 +1,4 @@
+from typing import Union
 import os
 
 import numpy as np
@@ -14,6 +15,7 @@ from lightning.pytorch.utilities.deepspeed import (
 
 from ..utils.setup import SetUp
 from ..tuners.rhythm_tuner import RhythmTuner
+from ..tuners.physformer_tuner import PhysFormerTuner
 
 
 def train(
@@ -335,7 +337,7 @@ def tune(
     val_loader = setup.get_val_loader()
     logger = setup.get_wandb_logger()
 
-    tuner: RhythmTuner = instantiate(
+    tuner: Union[RhythmTuner, PhysFormerTuner] = instantiate(
         config.tuner,
         train_loader=train_loader,
         val_loader=val_loader,
