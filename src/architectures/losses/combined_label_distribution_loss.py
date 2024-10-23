@@ -105,7 +105,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         target: torch.Tensor,
     ) -> torch.Tensor:
         criterion = nn.KLDivLoss(
-            reduction="batchmean",
+            reduce=False,
             log_target=False,
         )
         log_pred = F.log_softmax(
