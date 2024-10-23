@@ -1,0 +1,99 @@
+_target_: src.tuners.physformer_tuner.PhysFormerTuner
+hparams:
+  sharp_gradient:
+    low: 2.0
+    high: 10.0
+    log: False
+  num_heads:
+    - 4
+    - 8
+  num_layers:
+    - 4
+    - 8
+    - 12
+    - 16
+  tcdc_theta:
+    low: 0.5
+    high: 0.8
+    log: False
+  attention_dropout:
+    low: 0.1
+    high: 0.5
+    log: False
+  feed_forward_dropout:
+    low: 0.1
+    high: 0.5
+    log: False
+  std:
+    low: 1.0
+    high: 2.0
+    log: False
+  first_alpha:
+    low: 0.1
+    high: 1.0
+    log: False
+  first_beta:
+    low: 0.1
+    high: 1.0
+    log: False
+  alpha_factor:
+    low: 0.1
+    high: 1.0
+    log: False
+  beta_factor:
+    low: 1.0
+    high: 10.0
+    log: False
+  lr:
+    low: 5e-5
+    high: 5e-4
+    log: False
+  weight_decay:
+    low: 1e-5
+    high: 1e-2
+    log: False
+  warmup_ratio:
+    low: 1e-2
+    high: 1e-1
+    log: False
+  eta_min_ratio:
+    low: 5e-3
+    high: 5e-2
+    log: False
+
+module_params:
+  is_pretrained: ${is_pretrained}
+  patch_size: ${patch_size}
+  feature_size: ${feature_size}
+  model_dims: ${model_dims}
+  tcdc_kernel_size: ${tcdc_kernel_size}
+  tcdc_stride: ${tcdc_stride}
+  tcdc_padding: ${tcdc_padding}
+  tcdc_dilation: ${tcdc_dilation}
+  tcdc_groups: ${tcdc_groups}
+  tcdc_bias: ${tcdc_bias}
+  tcdc_eps: ${tcdc_eps}
+  feed_forward_dims: ${feed_forward_dims}
+  frame_rate_column_name: ${frame_rate_column_name}
+  bpm_column_name: ${bpm_column_name}
+  min_bpm: ${min_bpm}
+  max_bpm: ${max_bpm}
+  interval: step
+  devices: ${devices}
+  accelerator: ${accelerator}
+  strategy: ${strategy}
+  log_every_n_steps: ${log_every_n_steps}
+  precision: ${precision}
+  accumulate_grad_batches: ${accumulate_grad_batches}
+  gradient_clip_val: ${gradient_clip_val}
+  gradient_clip_algorithm: ${gradient_clip_algorithm}
+  max_epochs: ${epoch}
+  monitor: ${monitor}
+  mode: ${tracking_direction}
+  patience: ${patience}
+  min_delta: ${min_delta}
+
+direction: minimize
+seed: ${seed}
+num_trials: ${num_trials}
+hparams_save_path: ${hparams_save_path}

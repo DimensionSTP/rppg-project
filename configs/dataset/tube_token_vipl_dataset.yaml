@@ -12,3 +12,8 @@ ecg_column_name: ${ecg_column_name}
 num_devices: ${devices}
 batch_size: ${batch_size}
 clip_frame_size: ${clip_frame_size}
+image_size: ${image_size}
+augmentation_probability: ${augmentation_probability}
+augmentations:
+  - hflip
+  - vflip
