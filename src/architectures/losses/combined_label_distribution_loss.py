@@ -68,7 +68,7 @@ class CombinedLabelDistributionLoss(nn.Module):
     ) -> Dict[str, torch.Tensor]:
         scaled_bpm = scaled_bpm.unsqueeze(1)
 
-        range_size = max_bpm - min_bpm
+        range_size = max_bpm - min_bpm + 1
         bpm_range = torch.arange(
             0,
             range_size,
