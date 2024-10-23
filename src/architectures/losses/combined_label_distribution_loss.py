@@ -69,14 +69,13 @@ class CombinedLabelDistributionLoss(nn.Module):
         scaled_bpm = scaled_bpm.unsqueeze(1)
 
         range_size = max_bpm - min_bpm
-        bpm_range = (
-            torch.arange(
-                0,
-                range_size,
-            )
-            .float()
-            .unsqueeze(0)
-        )
+        bpm_range = torch.arange(
+            0,
+            range_size,
+            dtype=scaled_bpm.dtype,
+            device=scaled_bpm.device,
+        ).unsqueeze(0)
+
         diff = bpm_range - scaled_bpm
         exponent = -(diff**2) / (2 * std**2)
         normal_distribution = torch.exp(exponent) / (
