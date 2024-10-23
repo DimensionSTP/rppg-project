@@ -46,7 +46,7 @@ class CombinedLabelDistributionLoss(nn.Module):
             target=target,
         )
 
-        kl_div_loss, freq_ce_loss, bpm_mae = self.combined_loss(
+        combined_loss = self.combined_loss(
             pred=pred,
             bpm=bpm,
             min_bpm=min_bpm,
@@ -54,6 +54,9 @@ class CombinedLabelDistributionLoss(nn.Module):
             std=std,
             frame_rate=frame_rate,
         )
+        kl_div_loss = combined_loss["kl_div_loss"]
+        freq_ce_loss = combined_loss["freq_ce_loss"]
+        bpm_mae = combined_loss["bpm_mae"]
 
         total_loss = alpha * rppg_loss + beta * (freq_ce_loss + kl_div_loss)
 
