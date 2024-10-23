@@ -61,7 +61,7 @@ class CombinedLabelDistributionLoss(nn.Module):
 
     @staticmethod
     def normal_distribution(
-        bpm: torch.Tensor,
+        scaled_bpm: torch.Tensor,
         min_bpm: int,
         max_bpm: int,
         std: float,
