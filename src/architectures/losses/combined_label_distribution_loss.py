@@ -69,7 +69,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         loss = 1 - pearson_correlation
         return loss.mean()
 
-    def compute_complex_absolute_given_k(self, output, k, N):
+    def get_complex_absolute_given_k(self, output, k, N):
         two_pi_n_over_N = (
             Variable(
                 2 * math.pi * torch.arange(0, N, dtype=torch.float), requires_grad=True
@@ -96,16 +96,16 @@ class CombinedLabelDistributionLoss(nn.Module):
 
         return complex_absolute
 
-    def compute_complex_absolute(self, output, sampling_rate, bpm_range):
+    def get_complex_absolute(self, output, sampling_rate, bpm_range):
         output = output.view(1, -1)
         N = output.size()[1]
         unit_per_hz = sampling_rate / N
         feasible_bpm = bpm_range / 60.0
         k = feasible_bpm / unit_per_hz
-        complex_absolute = self.compute_complex_absolute_given_k(output, k, N)
+        complex_absolute = self.get_complex_absolute_given_k(output, k, N)
         return (1.0 / complex_absolute.sum()) * complex_absolute
 
-    def compute_combined_loss(
+    def get_combined_loss(
         self,
         predictions,
         bpm,
@@ -126,9 +126,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         predictions = predictions.view(1, -1)
         bpm = bpm.view(1, -1)
 
-        complex_absolute = self.compute_complex_absolute(
-            predictions, frame_rate, bpm_range
-        )
+        complex_absolute = self.get_complex_absolute(predictions, frame_rate, bpm_range)
         frequency_distribution = F.softmax(complex_absolute.view(-1), dim=0)
         kl_loss = self.kl_divergence_loss(frequency_distribution, bpm_distribution)
 
@@ -161,7 +159,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         rppg_loss = self.negative_pearson_loss(predictions, targets)
 
         # Calculate combined loss
-        kl_loss, freq_ce_loss, bpm_mae = self.compute_combined_loss(
+        kl_loss, freq_ce_loss, bpm_mae = self.get_combined_loss(
             predictions,
             bpm,
             min_bpm,
