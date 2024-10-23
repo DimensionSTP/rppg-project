@@ -245,32 +245,32 @@ class CustomizedPhysFormer(nn.Module):
 
     def forward(
         self,
-        x: torch.Tensor,
+        encoded: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
-        x = self.stem(x)
+        encoded = self.stem(encoded)
 
-        x = self.patch_embedding(x)
-        x = rearrange(
-            x,
+        encoded = self.patch_embedding(encoded)
+        encoded = rearrange(
+            encoded,
             "batch_size channels depth height width -> batch_size (depth height width) channels",
         )
 
-        x = self.physformer_encoder(x)
+        encoded = self.physformer_encoder(encoded)
 
-        num_patches = x.shape[1]
+        num_patches = encoded.shape[1]
         depth_size = num_patches // self.feature_size**2
-        x = rearrange(
-            x,
+        encoded = rearrange(
+            encoded,
             "batch_size (depth height width) channels -> batch_size channels depth height width",
             depth=depth_size,
             height=self.feature_size,
             width=self.feature_size,
         )
 
-        x = self.upsample(x)
-        x = x.mean(dim=-1).mean(dim=-1)
+        encoded = self.upsample(encoded)
+        encoded = encoded.mean(dim=-1).mean(dim=-1)
 
-        rppg = self.output_layer(x)
+        rppg = self.output_layer(encoded)
         rppg = rearrange(
             rppg,
             "batch_size 1 signals -> batch_size signals",
