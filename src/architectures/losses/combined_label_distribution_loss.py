@@ -194,7 +194,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         num_signals = pred.size(-1)
         frequency = frame_rate / num_signals
         bps_range = bpm_range / 60.0
-        absolute_beat = bps_range / frequency
+        absolute_beat = bps_range / frequency.unsqueeze(1)
         pred_frequency_distribution = self.pred_frequency_distribution(
             pred=pred,
             absolute_beat=absolute_beat,
