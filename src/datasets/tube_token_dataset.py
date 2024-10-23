@@ -68,6 +68,7 @@ class VIPLDataset(Dataset):
     ) -> Dict[str, Any]:
         images_path = os.path.join(
             self.data_path,
+            "vipl_tube",
             str(self.file_paths[idx]),
             "mp_rgb_full",
         )
