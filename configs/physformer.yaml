@@ -29,15 +29,44 @@ frame_rate_column_name: frame_rate
 bpm_column_name: BPM
 ecg_column_name: ECG
 clip_frame_size: 160
+image_size: 128
+augmentation_probability: 0.2
 
-lr: 1e-3
-weight_decay: 1e-2
+is_pretrained: False
+patch_size: 4
+feature_size: 4
+sharp_gradient: 2.0
+num_heads: 4
+model_dims: 96
+tcdc_kernel_size: 3
+tcdc_stride: 1
+tcdc_padding: 1
+tcdc_dilation: 1
+tcdc_groups: 1
+tcdc_bias: False
+tcdc_theta: 0.7
+tcdc_eps: 1e-8
+attention_dropout: 0.1
+feed_forward_dims: 144
+feed_forward_dropout: 0.1
+num_layers: 12
+
+min_bpm: 42
+max_bpm: 180
+std: 1.0
+first_alpha: 0.1
+first_beta: 1.0
+alpha_factor: 1.0
+beta_factor: 5.0
+
+lr: 1e-4
+weight_decay: 1e-4
 warmup_ratio: 5e-2
-eta_min_ratio: 1e-3
+eta_min_ratio: 1e-2
 
-monitor: val_loss
+monitor: val_visual_loss
 tracking_direction: min
-patience: 2
+patience: 5
 min_delta: 0
 
 devices: ${oc.decode:${oc.env:DEVICES}}
@@ -48,7 +77,7 @@ precision: 32
 accumulate_grad_batches: 1
 gradient_clip_val: 1
 gradient_clip_algorithm: norm
-epoch: 20
+epoch: 25
 
 model_name: PhysFormer
 dataset_name: VIPL
