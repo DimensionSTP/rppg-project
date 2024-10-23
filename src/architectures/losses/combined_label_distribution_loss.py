@@ -234,14 +234,14 @@ class CombinedLabelDistributionLoss(nn.Module):
 
         freq_ce_loss = F.cross_entropy(
             input=normalized_pred_frequency_distribution,
-            target=bpm,
+            target=scaled_bpm.long(),
         )
         bpm_mae = F.l1_loss(
             input=torch.max(
                 normalized_pred_frequency_distribution,
                 dim=-1,
             )[0],
-            target=bpm,
+            target=scaled_bpm,
         )
         return {
             "kl_div_loss": kl_div_loss,
