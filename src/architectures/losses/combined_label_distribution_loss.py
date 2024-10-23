@@ -62,9 +62,6 @@ class CombinedLabelDistributionLoss(nn.Module):
 
         return {
             "total_loss": total_loss,
-            "rppg_loss": rppg_loss,
-            "kl_div_loss": kl_div_loss,
-            "freq_ce_loss": freq_ce_loss,
             "bpm_mae": bpm_mae,
         }
 
