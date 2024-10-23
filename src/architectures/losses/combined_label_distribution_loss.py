@@ -1,4 +1,6 @@
+from typing import Dict
 import math
+
 import numpy as np
 
 import torch
@@ -8,16 +10,16 @@ from torch.autograd import Variable
 
 
 class CombinedLabelDistributionLoss(nn.Module):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     @staticmethod
     def normal_distribution(
-        bpm,
-        min_bpm,
-        max_bpm,
-        std,
-    ):
+        bpm: torch.Tensor,
+        min_bpm: int,
+        max_bpm: int,
+        std: float,
+    ) -> Dict[str, torch.Tensor]:
         scaled_bpm = bpm - min_bpm
         range_size = max_bpm - min_bpm
         bpm_range = torch.arange(0, range_size).float().unsqueeze(0)
@@ -107,13 +109,13 @@ class CombinedLabelDistributionLoss(nn.Module):
 
     def get_combined_loss(
         self,
-        predictions,
-        bpm,
-        min_bpm,
-        max_bpm,
-        std,
-        frame_rate,
-    ):
+        pred: torch.Tensor,
+        bpm: torch.Tensor,
+        min_bpm: int,
+        max_bpm: int,
+        std: float,
+        frame_rate: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
         distribution_outputs = self.normal_distribution(
             bpm,
             min_bpm,
@@ -123,44 +125,53 @@ class CombinedLabelDistributionLoss(nn.Module):
         bpm_distribution = distribution_outputs["normal_distribution"]
         bpm_range = distribution_outputs["bpm_range"]
 
-        predictions = predictions.view(1, -1)
+        pred = pred.view(1, -1)
         bpm = bpm.view(1, -1)
 
-        complex_absolute = self.get_complex_absolute(predictions, frame_rate, bpm_range)
+        complex_absolute = self.get_complex_absolute(pred, frame_rate, bpm_range)
         frequency_distribution = F.softmax(complex_absolute.view(-1), dim=0)
-        kl_loss = self.kl_divergence_loss(frequency_distribution, bpm_distribution)
+        kl_div_loss = self.kl_divergence_loss(frequency_distribution, bpm_distribution)
 
         whole_max_val, whole_max_idx = complex_absolute.view(-1).max(0)
         whole_max_idx = whole_max_idx.type(torch.float)
 
         return (
-            kl_loss,
+            kl_div_loss,
             F.cross_entropy(complex_absolute, bpm.view((1)).type(torch.long)),
             torch.abs(bpm[0] - whole_max_idx),
         )
 
     def forward(
         self,
-        predictions,
-        targets,
-        bpm,
-        min_bpm=40,
-        max_bpm=179,
-        std=1.0,
-        frame_rate=30.0,
-        alpha=0.05,
-        beta=5.0,
-    ):
-        # Normalizing predictions
-        predictions = (
-            predictions - torch.mean(predictions, dim=-1, keepdim=True)
-        ) / torch.std(predictions, dim=-1, keepdim=True)
+        pred: torch.Tensor,
+        target: torch.Tensor,
+        bpm: torch.Tensor,
+        min_bpm: int = 40,
+        max_bpm: int = 179,
+        std: float = 1.0,
+        frame_rate: torch.Tensor = 30.0,
+        alpha: float = 0.05,
+        beta: float = 5.0,
+    ) -> Dict[str, torch.Tensor]:
+        # Normalizing pred
+        pred = (
+            pred
+            - torch.mean(
+                pred,
+                dim=-1,
+                keepdim=True,
+            )
+        ) / torch.std(
+            pred,
+            dim=-1,
+            keepdim=True,
+        )
 
-        rppg_loss = self.negative_pearson_loss(predictions, targets)
+        rppg_loss = self.negative_pearson_loss(pred, target)
 
         # Calculate combined loss
-        kl_loss, freq_ce_loss, bpm_mae = self.get_combined_loss(
-            predictions,
+        kl_div_loss, freq_ce_loss, bpm_mae = self.get_combined_loss(
+            pred,
             bpm,
             min_bpm,
             max_bpm,
@@ -168,6 +179,12 @@ class CombinedLabelDistributionLoss(nn.Module):
             frame_rate,
         )
 
-        total_loss = alpha * rppg_loss + beta * (freq_ce_loss + kl_loss)
+        total_loss = alpha * rppg_loss + beta * (freq_ce_loss + kl_div_loss)
 
-        return total_loss, rppg_loss, kl_loss, freq_ce_loss, bpm_mae
+        return {
+            "total_loss": total_loss,
+            "rppg_loss": rppg_loss,
+            "kl_div_loss": kl_div_loss,
+            "freq_ce_loss": freq_ce_loss,
+            "bpm_mae": bpm_mae,
+        }
