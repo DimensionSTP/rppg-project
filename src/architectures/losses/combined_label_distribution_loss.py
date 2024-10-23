@@ -208,8 +208,10 @@ class CombinedLabelDistributionLoss(nn.Module):
         std: float,
         frame_rate: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
+        scaled_bpm = bpm - min_bpm
+
         distribution_outputs = self.normal_distribution(
-            bpm=bpm,
+            scaled_bpm=scaled_bpm,
             min_bpm=min_bpm,
             max_bpm=max_bpm,
             std=std,
