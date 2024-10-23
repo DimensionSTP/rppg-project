@@ -15,12 +15,12 @@ class CombinedLabelDistributionLoss(nn.Module):
         pred: torch.Tensor,
         target: torch.Tensor,
         bpm: torch.Tensor,
-        min_bpm: int = 42,
-        max_bpm: int = 180,
-        std: float = 1.0,
-        frame_rate: torch.Tensor = 30.0,
-        alpha: float = 0.05,
-        beta: float = 5.0,
+        min_bpm: int,
+        max_bpm: int,
+        std: float,
+        frame_rate: torch.Tensor,
+        alpha: float,
+        beta: float,
     ) -> Dict[str, torch.Tensor]:
         bpm = torch.clamp(
             bpm,
