@@ -71,7 +71,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         loss = 1 - pearson_correlation
         return loss.mean()
 
-    def get_complex_absolute_given_k(self, output, k, N):
+    def complex_absolute_given_k(self, output, k, N):
         two_pi_n_over_N = (
             Variable(
                 2 * math.pi * torch.arange(0, N, dtype=torch.float), requires_grad=True
@@ -98,16 +98,16 @@ class CombinedLabelDistributionLoss(nn.Module):
 
         return complex_absolute
 
-    def get_complex_absolute(self, output, sampling_rate, bpm_range):
+    def complex_absolute(self, output, sampling_rate, bpm_range):
         output = output.view(1, -1)
         N = output.size()[1]
         unit_per_hz = sampling_rate / N
         feasible_bpm = bpm_range / 60.0
         k = feasible_bpm / unit_per_hz
-        complex_absolute = self.get_complex_absolute_given_k(output, k, N)
+        complex_absolute = self.complex_absolute_given_k(output, k, N)
         return (1.0 / complex_absolute.sum()) * complex_absolute
 
-    def get_combined_loss(
+    def combined_loss(
         self,
         pred: torch.Tensor,
         bpm: torch.Tensor,
@@ -128,9 +128,15 @@ class CombinedLabelDistributionLoss(nn.Module):
         pred = pred.view(1, -1)
         bpm = bpm.view(1, -1)
 
-        complex_absolute = self.get_complex_absolute(pred, frame_rate, bpm_range)
-        frequency_distribution = F.softmax(complex_absolute.view(-1), dim=0)
-        kl_div_loss = self.kl_divergence_loss(frequency_distribution, bpm_distribution)
+        complex_absolute = self.complex_absolute(pred, frame_rate, bpm_range)
+        frequency_distribution = F.softmax(
+            complex_absolute.view(-1),
+            dim=0,
+        )
+        kl_div_loss = self.kl_divergence_loss(
+            pred=frequency_distribution,
+            target=bpm_distribution,
+        )
 
         whole_max_val, whole_max_idx = complex_absolute.view(-1).max(0)
         whole_max_idx = whole_max_idx.type(torch.float)
@@ -153,7 +159,6 @@ class CombinedLabelDistributionLoss(nn.Module):
         alpha: float = 0.05,
         beta: float = 5.0,
     ) -> Dict[str, torch.Tensor]:
-        # Normalizing pred
         pred = (
             pred
             - torch.mean(
@@ -167,16 +172,18 @@ class CombinedLabelDistributionLoss(nn.Module):
             keepdim=True,
         )
 
-        rppg_loss = self.negative_pearson_loss(pred, target)
+        rppg_loss = self.negative_pearson_loss(
+            pred=pred,
+            target=target,
+        )
 
-        # Calculate combined loss
-        kl_div_loss, freq_ce_loss, bpm_mae = self.get_combined_loss(
-            pred,
-            bpm,
-            min_bpm,
-            max_bpm,
-            std,
-            frame_rate,
+        kl_div_loss, freq_ce_loss, bpm_mae = self.combined_loss(
+            pred=pred,
+            bpm=bpm,
+            min_bpm=min_bpm,
+            max_bpm=max_bpm,
+            std=std,
+            frame_rate=frame_rate,
         )
 
         total_loss = alpha * rppg_loss + beta * (freq_ce_loss + kl_div_loss)
