@@ -9,53 +9,95 @@ from lightning.pytorch import LightningModule
 
 from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
 
+from .losses.combined_label_distribution_loss import CombinedLabelDistributionLoss
+
 
 class PhysFormerArchitecture(LightningModule):
     def __init__(
         self,
         model: nn.Module,
+        frame_rate_column_name: str,
+        bpm_column_name: str,
+        min_bpm: int,
+        max_bpm: int,
+        std: float,
+        first_alpha: float,
+        first_beta: float,
+        alpha_factor: float,
+        beta_factor: float,
         strategy: str,
         lr: float,
         weight_decay: float,
         warmup_ratio: float,
         eta_min_ratio: float,
         interval: str,
-        connected_dir: str,
     ) -> None:
         super().__init__()
         self.model = model
+        self.frame_rate_column_name = frame_rate_column_name
+        self.bpm_column_name = bpm_column_name
+        self.min_bpm = min_bpm
+        self.max_bpm = max_bpm
+        self.std = std
+        self.first_alpha = first_alpha
+        self.first_beta = first_beta
+        self.alpha_factor = alpha_factor
+        self.beta_factor = beta_factor
+        self.criterion = CombinedLabelDistributionLoss()
         self.strategy = strategy
         self.lr = lr
         self.weight_decay = weight_decay
         self.warmup_ratio = warmup_ratio
         self.eta_min_ratio = eta_min_ratio
         self.interval = interval
-        self.connected_dir = connected_dir
 
     def forward(
         self,
-        stmap: torch.Tensor,
+        encoded: torch.Tensor,
     ) -> torch.Tensor:
-        output = self.model(stmap)
-        rnn_output_seq = output["rnn_output_sequence"]
-        return rnn_output_seq
+        output = self.model(encoded)
+        rppg = output["rppg"]
+        return rppg
 
     def step(
         self,
         batch: Dict[str, Any],
     ) -> Dict[str, torch.Tensor]:
-        stmap = batch["stmap"]
+        encoded = batch["encoded"]
+        frame_rate = batch[self.frame_rate_column_name]
+        bpm = batch[self.bpm_column_name]
         label = batch["label"]
         index = batch["index"]
-        pred = self(stmap)
-        loss = F.mse_loss(
-            pred,
-            label,
+
+        rppg = self(encoded)
+        pred = (rppg - torch.mean(rppg)) / torch.std(rppg)
+
+        total_epochs = self.trainer.max_epochs
+        current_epoch = self.current_epoch
+        epoch_scalar = current_epoch / total_epochs
+        alpha = self.first_alpha * math.pow(
+            self.alpha_factor,
+            epoch_scalar,
         )
-        visual_loss = F.l1_loss(
-            pred,
-            label,
+        beta = self.first_beta * math.pow(
+            self.beta_factor,
+            epoch_scalar,
         )
+
+        losses = self.criterion(
+            pred=pred,
+            target=label,
+            bpm=bpm,
+            min_bpm=self.min_bpm,
+            max_bpm=self.max_bpm,
+            std=self.std,
+            frame_rate=frame_rate,
+            alpha=alpha,
+            beta=beta,
+        )
+
+        loss = losses["total_loss"]
+        visual_loss = losses["bpm_mae"]
         return {
             "loss": loss,
             "visual_loss": visual_loss,
@@ -134,19 +176,19 @@ class PhysFormerArchitecture(LightningModule):
         pred = output["pred"]
         label = output["label"]
         self.log(
-            "train_rmse_loss",
-            math.sqrt(loss),
+            "train_loss",
+            loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
         )
         self.log(
-            "train_mae_loss",
+            "train_visual_loss",
             visual_loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
         )
         return {
@@ -166,19 +208,19 @@ class PhysFormerArchitecture(LightningModule):
         pred = output["pred"]
         label = output["label"]
         self.log(
-            "val_rmse_loss",
-            math.sqrt(loss),
+            "val_loss",
+            loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
         )
         self.log(
-            "val_mae_loss",
+            "val_visual_loss",
             visual_loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
         )
         return {
@@ -198,19 +240,19 @@ class PhysFormerArchitecture(LightningModule):
         pred = output["pred"]
         label = output["label"]
         self.log(
-            "test_rmse_loss",
-            math.sqrt(loss),
+            "test_loss",
+            loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
         )
         self.log(
-            "test_mae_loss",
+            "test_visual_loss",
             visual_loss,
             on_step=False,
             on_epoch=True,
-            prog_bar=True,
+            prog_bar=False,
             sync_dist=True,
         )
         return {
