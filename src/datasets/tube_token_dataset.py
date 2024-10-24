@@ -207,15 +207,32 @@ class VIPLDataset(Dataset):
                 images_path,
                 image_name,
             )
+
+            before_frame = frame - 1
+            before_image_name = f"image_{before_frame:05d}.png"
+            before_image_path = os.path.join(
+                images_path,
+                before_image_name,
+            )
+
+            after_frame = frame + 1
+            after_image_name = f"image_{after_frame:05d}.png"
+            after_image_path = os.path.join(
+                images_path,
+                after_image_name,
+            )
+
             if os.path.exists(image_path):
-                image_path = image_path
+                image = cv2.imread(image_path)
+            elif os.path.exists(before_image_path):
+                image = cv2.imread(before_image_path)
+            elif os.path.exists(after_image_path):
+                image = cv2.imread(after_image_path)
             else:
-                image_path = os.path.join(
-                    self.data_path,
-                    "vipl_tube",
-                    "p30/v1/source2/mp_rgb_full/image_00736.png",
+                raise ValueError(
+                    f"There are no images in both successive front and back frames: {image_path}"
                 )
-            image = cv2.imread(image_path)
+
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = cv2.resize(
                 image,
