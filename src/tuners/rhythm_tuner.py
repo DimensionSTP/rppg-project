@@ -117,7 +117,7 @@ class RhythmTuner:
                 log=self.hparams.weight_decay.log,
             )
         if self.hparams.warmup_ratio:
-            params["warmup_ratio"] = trial.suggest_int(
+            params["warmup_ratio"] = trial.suggest_float(
                 name="warmup_ratio",
                 low=self.hparams.warmup_ratio.low,
                 high=self.hparams.warmup_ratio.high,

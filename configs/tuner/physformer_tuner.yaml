@@ -49,8 +49,8 @@ hparams:
     high: 5e-4
     log: False
   weight_decay:
-    low: 1e-5
-    high: 1e-2
+    low: 1e-2
+    high: 1e-1
     log: False
   warmup_ratio:
     low: 1e-2
