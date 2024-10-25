@@ -18,9 +18,12 @@ class SetUp:
     ) -> None:
         self.config = config
         self.num_cpus = os.cpu_count()
-        self.num_workers = min(
+        self.num_fit_workers = min(
             self.num_cpus,
             (config.devices * config.workers_ratio),
+        )
+        self.num_workers = (
+            self.num_cpus if config.use_all_workers else self.num_fit_workers
         )
 
     def get_train_loader(self) -> DataLoader:
