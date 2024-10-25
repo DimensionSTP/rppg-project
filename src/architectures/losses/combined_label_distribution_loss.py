@@ -201,8 +201,8 @@ class CombinedLabelDistributionLoss(nn.Module):
             num_signals=num_signals,
         )
         normalized_pred_frequency_distribution = (
-            1.0 / pred_frequency_distribution.sum()
-        ) * pred_frequency_distribution
+            pred_frequency_distribution / pred_frequency_distribution.sum()
+        )
         return normalized_pred_frequency_distribution
 
     def combined_loss(
