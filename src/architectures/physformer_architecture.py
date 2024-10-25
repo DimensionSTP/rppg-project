@@ -67,8 +67,8 @@ class PhysFormerArchitecture(LightningModule):
         label = batch["label"]
         index = batch["index"]
 
-        rppg = self(encoded)
-        pred = (rppg - torch.mean(rppg)) / torch.std(rppg)
+        output = self(encoded)
+        pred = output["rppg"]
 
         total_epochs = self.trainer.max_epochs
         current_epoch = self.current_epoch
