@@ -65,6 +65,33 @@ class CombinedLabelDistributionLoss(nn.Module):
             "bpm_mae": bpm_mae,
         }
 
+    def negative_pearson_loss(
+        self,
+        pred: torch.Tensor,
+        target: torch.Tensor,
+    ) -> torch.Tensor:
+        pred_mean = pred.mean(
+            dim=-1,
+            keepdim=True,
+        )
+        target_mean = target.mean(
+            dim=-1,
+            keepdim=True,
+        )
+
+        pred_centered = pred - pred_mean
+        target_centered = target - target_mean
+
+        pred_std = pred_centered.pow(2).sum(dim=-1).sqrt()
+        target_std = target_centered.pow(2).sum(dim=-1).sqrt()
+
+        covariance = (pred_centered * target_centered).sum(dim=-1)
+
+        pearson_correlation = covariance / (pred_std * target_std)
+
+        loss = 1 - pearson_correlation
+        return loss.mean()
+
     @staticmethod
     def normal_distribution(
         scaled_bpm: torch.Tensor,
@@ -95,52 +122,6 @@ class CombinedLabelDistributionLoss(nn.Module):
             "normal_distribution": normal_distribution,
             "bpm_range": bpm_range,
         }
-
-    @staticmethod
-    def kl_divergence_loss(
-        pred: torch.Tensor,
-        target: torch.Tensor,
-    ) -> torch.Tensor:
-        criterion = nn.KLDivLoss(
-            reduction="batchmean",
-            log_target=False,
-        )
-        log_pred = F.log_softmax(
-            pred,
-            dim=-1,
-        )
-        loss = criterion(
-            input=log_pred,
-            target=target,
-        )
-        return loss
-
-    def negative_pearson_loss(
-        self,
-        pred: torch.Tensor,
-        target: torch.Tensor,
-    ) -> torch.Tensor:
-        pred_mean = pred.mean(
-            dim=-1,
-            keepdim=True,
-        )
-        target_mean = target.mean(
-            dim=-1,
-            keepdim=True,
-        )
-
-        pred_centered = pred - pred_mean
-        target_centered = target - target_mean
-
-        pred_std = pred_centered.pow(2).sum(dim=-1).sqrt()
-        target_std = target_centered.pow(2).sum(dim=-1).sqrt()
-
-        covariance = (pred_centered * target_centered).sum(dim=-1)
-
-        pearson_correlation = covariance / (pred_std * target_std)
-
-        loss = 1 - pearson_correlation
-        return loss.mean()
 
     def pred_frequency_distribution(
         self,
