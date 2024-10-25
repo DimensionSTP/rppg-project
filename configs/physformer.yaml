@@ -20,7 +20,7 @@ split:
   test: test
   predict: predict
 
-batch_size: 128
+batch_size: 32
 workers_ratio: 4
 use_all_workers: False
 
