@@ -22,6 +22,7 @@ split:
 
 batch_size: 128
 workers_ratio: 4
+use_all_workers: False
 
 split_ratio: 1e-2
 file_path_column_name: file_path
