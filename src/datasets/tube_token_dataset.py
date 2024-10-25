@@ -87,19 +87,19 @@ class VIPLDataset(Dataset):
             :,
         ]
         transformed = self.transform(image=first_slice)
-        transformed_slices = []
-        for depth in range(self.clip_frame_size):
-            slice = tube_token[
-                depth,
-                :,
-                :,
-                :,
-            ]
-            transformed_slice = A.ReplayCompose.replay(
-                transformed["replay"],
-                image=slice,
+        replay = transformed["replay"]
+        transformed_slices = [
+            A.ReplayCompose.replay(
+                replay,
+                image=tube_token[
+                    depth,
+                    :,
+                    :,
+                    :,
+                ],
             )["image"]
-            transformed_slices.append(transformed_slice)
+            for depth in range(self.clip_frame_size)
+        ]
         transformed_tube_token = torch.stack(
             transformed_slices,
             dim=0,
