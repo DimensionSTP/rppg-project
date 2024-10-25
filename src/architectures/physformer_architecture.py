@@ -55,8 +55,7 @@ class PhysFormerArchitecture(LightningModule):
         encoded: torch.Tensor,
     ) -> torch.Tensor:
         output = self.model(encoded)
-        rppg = output["rppg"]
-        return rppg
+        return output
 
     def step(
         self,
