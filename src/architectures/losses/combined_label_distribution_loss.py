@@ -214,9 +214,14 @@ class CombinedLabelDistributionLoss(nn.Module):
             )
         )
 
-        kl_div_loss = self.kl_divergence_loss(
-            pred=normalized_pred_frequency_distribution,
+        kl_div_loss = F.kl_div(
+            input=F.log_softmax(
+                normalized_pred_frequency_distribution,
+                dim=-1,
+            ),
             target=bpm_distribution,
+            reduction="sum",
+            log_target=False,
         )
 
         freq_ce_loss = F.cross_entropy(
