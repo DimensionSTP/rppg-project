@@ -19,6 +19,7 @@ class VIPLDataset(Dataset):
         self,
         data_path: str,
         metadata_path: str,
+        aug_interval: int,
         split: str,
         split_ratio: float,
         seed: int,
@@ -38,6 +39,7 @@ class VIPLDataset(Dataset):
         super().__init__()
         self.data_path = data_path
         self.metadata_path = metadata_path
+        self.aug_interval = aug_interval
         self.split = split
         self.split_ratio = split_ratio
         self.seed = seed
@@ -134,7 +136,9 @@ class VIPLDataset(Dataset):
 
     def get_metadata(self) -> Dict[str, List[Any]]:
         if self.split in ["train", "val"]:
-            pickle_path = f"{self.metadata_path}/vipl/fold1_train.pkl"
+            pickle_path = (
+                f"{self.metadata_path}/vipl/aug_interval={self.aug_interval}_train.pkl"
+            )
             data = pd.read_pickle(pickle_path)
             data = data.fillna("_")
             train_data, val_data = train_test_split(
@@ -148,11 +152,13 @@ class VIPLDataset(Dataset):
             else:
                 data = val_data
         elif self.split == "test":
-            pickle_path = f"{self.metadata_path}/vipl/fold1_{self.split}1.pkl"
+            pickle_path = f"{self.metadata_path}/vipl/aug_interval={self.aug_interval}_{self.split}.pkl"
             data = pd.read_pickle(pickle_path)
             data = data.fillna("_")
         elif self.split == "predict":
-            pickle_path = f"{self.metadata_path}/vipl/fold1_test1.pkl"
+            pickle_path = (
+                f"{self.metadata_path}/vipl/faug_interval={self.aug_interval}_test.pkl"
+            )
             data = pd.read_pickle(pickle_path)
             data = data.fillna("_")
             if self.num_devices > 1:

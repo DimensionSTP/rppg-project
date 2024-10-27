@@ -1,6 +1,7 @@
 _target_: src.datasets.tube_token_dataset.VIPLDataset
 data_path: ${connected_dir}/data
 metadata_path: ${connected_dir}/metadata
+aug_interval: ${aug_interval}
 split: ${split.train}
 split_ratio: ${split_ratio}
 seed: ${seed}
