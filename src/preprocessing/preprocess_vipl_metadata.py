@@ -28,36 +28,36 @@ def preprocess_vipl_metadata(
     )
 
     df.columns = [
-        "file_path",
-        "frame_index",
-        "frame_rate",
-        "BPM",
+        config.file_path_column_name,
+        config.frame_index_column_name,
+        config.frame_rate_column_name,
+        config.bpm_column_name,
         "std",
     ] + [f"col_{i}" for i in range(5, df.shape[1])]
 
-    df["ECG"] = df.apply(
+    df[config.ecg_column_name] = df.apply(
         lambda row: row[5:].tolist(),
         axis=1,
     )
 
     df = df[
         [
-            "file_path",
-            "frame_index",
-            "frame_rate",
-            "BPM",
+            config.file_path_column_name,
+            config.frame_index_column_name,
+            config.frame_rate_column_name,
+            config.bpm_column_name,
             "std",
-            "ECG",
+            config.ecg_column_name,
         ]
     ]
 
-    df["frame_index"] = df["frame_index"] - 1
+    df[config.frame_index_column_name] = df[config.frame_index_column_name] - 1
 
     missing_file_paths = []
     for i in tqdm(range(config.clip_frame_size)):
         for _, row in df.iterrows():
-            file_path = row["file_path"]
-            frame_index = row["frame_index"]
+            file_path = row[config.file_path_column_name]
+            frame_index = row[config.frame_index_column_name]
             frame = frame_index + i
             image_name = f"image_{frame:05d}.png"
             image_path = os.path.join(
@@ -73,10 +73,10 @@ def preprocess_vipl_metadata(
                     pass
                 else:
                     missing_file_paths.append(file_path)
-    df = df[~df["file_path"].isin(missing_file_paths)]
+    df = df[~df[config.file_path_column_name].isin(missing_file_paths)]
 
     if len(df) == 1:
-        ecg_length = len(df["ECG"])
+        ecg_length = len(df[config.ecg_column_name])
     else:
         ecg_length = len(df.iloc[0, -1])
     end_index = ecg_length - config.clip_frame_size
@@ -88,7 +88,7 @@ def preprocess_vipl_metadata(
         copied_df = df.copy()
         copied_df.insert(
             2,
-            "tube_index",
+            config.tube_index_column_name,
             tube_index,
         )
         df_list.append(copied_df)
@@ -104,10 +104,10 @@ def preprocess_vipl_metadata(
     )
 
     train_df.to_pickle(
-        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_train.pkl"
+        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_train1.pkl"
     )
     test_df.to_pickle(
-        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_test.pkl"
+        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_test1.pkl"
     )
 
 
