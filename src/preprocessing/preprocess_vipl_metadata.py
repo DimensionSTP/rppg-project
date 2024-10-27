@@ -74,14 +74,23 @@ def preprocess_vipl_metadata(
 
     missing_file_paths = set()
     checked_paths = {}
+
     for _, row in tqdm(augmented_df.iterrows(), total=len(augmented_df)):
         file_path = row[config.file_path_column_name]
+        tube_index = row[config.tube_index_column_name]
+        frame_index = row[config.frame_index_column_name]
+
+        checked_key = (
+            file_path,
+            tube_index,
+            frame_index,
+        )
 
         if file_path in missing_file_paths:
             continue
 
-        if file_path in checked_paths:
-            if checked_paths[file_path] is True:
+        if checked_key in checked_paths:
+            if checked_paths[checked_key] is True:
                 continue
         else:
             all_files_exist = True
