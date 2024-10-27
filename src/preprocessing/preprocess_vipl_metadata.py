@@ -74,10 +74,7 @@ def preprocess_vipl_metadata(
 
     missing_file_paths = set()
     checked_paths = set()
-    for _, row in tqdm(
-        augmented_df.iterrows(),
-        total=len(augmented_df),
-    ):
+    for _, row in tqdm(augmented_df.iterrows(), total=len(augmented_df)):
         file_path = row[config.file_path_column_name]
 
         if file_path in checked_paths:
@@ -85,7 +82,8 @@ def preprocess_vipl_metadata(
 
         for i in range(config.clip_frame_size):
             frame_index = row[config.frame_index_column_name]
-            frame = frame_index + i
+            tube_index = row[config.tube_index_column_name]
+            frame = frame_index + tube_index + i
             image_name = f"image_{frame:05d}.png"
             image_path = os.path.join(
                 f"{config.connected_dir}/data/vipl_tube",
