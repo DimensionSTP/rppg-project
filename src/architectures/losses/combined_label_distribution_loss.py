@@ -232,7 +232,7 @@ class CombinedLabelDistributionLoss(nn.Module):
             input=torch.max(
                 normalized_pred_frequency_distribution,
                 dim=-1,
-            )[0],
+            )[1],
             target=scaled_bpm,
         )
         return {
