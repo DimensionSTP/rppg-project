@@ -53,32 +53,7 @@ def preprocess_vipl_metadata(
 
     df[config.frame_index_column_name] = df[config.frame_index_column_name] - 1
 
-    missing_file_paths = []
-    for i in tqdm(range(config.clip_frame_size)):
-        for _, row in df.iterrows():
-            file_path = row[config.file_path_column_name]
-            frame_index = row[config.frame_index_column_name]
-            frame = frame_index + i
-            image_name = f"image_{frame:05d}.png"
-            image_path = os.path.join(
-                f"{config.connected_dir}/data/vipl_tube",
-                file_path,
-                "mp_rgb_full",
-                image_name,
-            )
-            if os.path.exists(image_path):
-                pass
-            else:
-                if file_path in missing_file_paths:
-                    pass
-                else:
-                    missing_file_paths.append(file_path)
-    df = df[~df[config.file_path_column_name].isin(missing_file_paths)]
-
-    if len(df) == 1:
-        ecg_length = len(df[config.ecg_column_name])
-    else:
-        ecg_length = len(df.iloc[0, -1])
+    ecg_length = len(df.iloc[0, -1])
     end_index = ecg_length - config.clip_frame_size
     aug_times = end_index // config.aug_interval
     tube_indices = [i * config.aug_interval for i in range(aug_times)]
@@ -96,6 +71,35 @@ def preprocess_vipl_metadata(
         df_list,
         ignore_index=True,
     )
+
+    missing_file_paths = set()
+    checked_paths = set()
+    for _, row in tqdm(
+        augmented_df.iterrows(),
+        total=len(augmented_df),
+    ):
+        file_path = row[config.file_path_column_name]
+
+        if file_path in checked_paths:
+            continue
+
+        for i in range(config.clip_frame_size):
+            frame_index = row[config.frame_index_column_name]
+            frame = frame_index + i
+            image_name = f"image_{frame:05d}.png"
+            image_path = os.path.join(
+                f"{config.connected_dir}/data/vipl_tube",
+                file_path,
+                "mp_rgb_full",
+                image_name,
+            )
+            if not os.path.exists(image_path):
+                missing_file_paths.add(file_path)
+                break
+        checked_paths.add(file_path)
+    augmented_df = augmented_df[
+        ~augmented_df[config.file_path_column_name].isin(missing_file_paths)
+    ]
 
     train_df, test_df = train_test_split(
         augmented_df,
