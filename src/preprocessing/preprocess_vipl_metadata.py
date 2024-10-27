@@ -73,28 +73,36 @@ def preprocess_vipl_metadata(
     )
 
     missing_file_paths = set()
-    checked_paths = set()
+    checked_paths = {}
     for _, row in tqdm(augmented_df.iterrows(), total=len(augmented_df)):
         file_path = row[config.file_path_column_name]
 
-        if file_path in checked_paths:
+        if file_path in missing_file_paths:
             continue
 
-        for i in range(config.clip_frame_size):
-            frame_index = row[config.frame_index_column_name]
-            tube_index = row[config.tube_index_column_name]
-            frame = frame_index + tube_index + i
-            image_name = f"image_{frame:05d}.png"
-            image_path = os.path.join(
-                f"{config.connected_dir}/data/vipl_tube",
-                file_path,
-                "mp_rgb_full",
-                image_name,
-            )
-            if not os.path.exists(image_path):
-                missing_file_paths.add(file_path)
-                break
-        checked_paths.add(file_path)
+        if file_path in checked_paths:
+            if checked_paths[file_path] is True:
+                continue
+        else:
+            all_files_exist = True
+            for i in range(config.clip_frame_size):
+                frame_index = row[config.frame_index_column_name]
+                tube_index = row[config.tube_index_column_name]
+                frame = frame_index + tube_index + i
+                image_name = f"image_{frame:05d}.png"
+                image_path = os.path.join(
+                    f"{config.connected_dir}/data/vipl_tube",
+                    file_path,
+                    "mp_rgb_full",
+                    image_name,
+                )
+
+                if not os.path.exists(image_path):
+                    all_files_exist = False
+                    missing_file_paths.add(file_path)
+                    break
+
+            checked_paths[file_path] = all_files_exist
     augmented_df = augmented_df[
         ~augmented_df[config.file_path_column_name].isin(missing_file_paths)
     ]
