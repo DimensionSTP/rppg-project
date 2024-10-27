@@ -104,10 +104,10 @@ def preprocess_vipl_metadata(
     )
 
     train_df.to_pickle(
-        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_train1.pkl"
+        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_train.pkl"
     )
     test_df.to_pickle(
-        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_test1.pkl"
+        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_test.pkl"
     )
 
 
