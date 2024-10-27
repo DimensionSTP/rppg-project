@@ -24,7 +24,7 @@ batch_size: 32
 workers_ratio: 8
 use_all_workers: False
 
-split_ratio: 1e-2
+split_ratio: 1e-1
 file_path_column_name: file_path
 frame_index_column_name: frame_index
 frame_rate_column_name: frame_rate
@@ -61,14 +61,14 @@ first_beta: 1.0
 alpha_factor: 1.0
 beta_factor: 5.0
 
-lr: 1e-3
+lr: 1e-5
 weight_decay: 1e-2
 warmup_ratio: 5e-2
 eta_min_ratio: 1e-2
 
 monitor: val_visual_loss
 tracking_direction: min
-patience: 5
+patience: 15
 min_delta: 0
 
 devices: ${oc.decode:${oc.env:DEVICES}}
@@ -79,7 +79,7 @@ precision: 32
 accumulate_grad_batches: 1
 gradient_clip_val: 1
 gradient_clip_algorithm: norm
-epoch: 25
+epoch: 30
 
 model_name: PhysFormer
 dataset_name: VIPL
