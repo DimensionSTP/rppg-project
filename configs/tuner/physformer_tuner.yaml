@@ -45,8 +45,8 @@ hparams:
     high: 10.0
     log: False
   lr:
-    low: 5e-5
-    high: 5e-4
+    low: 5e-6
+    high: 5e-5
     log: False
   weight_decay:
     low: 1e-2
