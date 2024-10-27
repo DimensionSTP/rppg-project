@@ -55,7 +55,7 @@ class VIPLDataset(Dataset):
         self.augmentations = augmentations
         metadata = self.get_metadata()
         self.file_paths = metadata["file_paths"]
-        self.frame_idices = metadata["frame_idices"]
+        self.frame_indices = metadata["frame_indices"]
         self.tube_indices = metadata["tube_indices"]
         self.frame_rates = metadata["frame_rates"]
         self.bpms = metadata["bpms"]
@@ -80,7 +80,7 @@ class VIPLDataset(Dataset):
 
         tube_token = self.get_single_tube_token(
             images_path=images_path,
-            frame_index=self.frame_idices[idx],
+            frame_index=self.frame_indices[idx],
             tube_index=self.tube_indices[idx],
         )
         tube_token = tube_token / 255.0
@@ -157,7 +157,7 @@ class VIPLDataset(Dataset):
             data = data.fillna("_")
         elif self.split == "predict":
             pickle_path = (
-                f"{self.metadata_path}/vipl/faug_interval={self.aug_interval}_test.pkl"
+                f"{self.metadata_path}/vipl/aug_interval={self.aug_interval}_test.pkl"
             )
             data = pd.read_pickle(pickle_path)
             data = data.fillna("_")
@@ -182,15 +182,15 @@ class VIPLDataset(Dataset):
         else:
             raise ValueError(f"Inavalid split: {self.split}")
         file_paths = data[self.file_path_column_name].tolist()
-        frame_idices = data[self.frame_index_column_name].tolist()
-        tube_idices = data[self.tube_index_column_name].tolist()
+        frame_indices = data[self.frame_index_column_name].tolist()
+        tube_indices = data[self.tube_index_column_name].tolist()
         frame_rates = data[self.frame_rate_column_name].tolist()
         bpms = data[self.bpm_column_name].tolist()
         labels = data[self.ecg_column_name].tolist()
         return {
             "file_paths": file_paths,
-            "frame_idices": frame_idices,
-            "tube_idices": tube_idices,
+            "frame_indices": frame_indices,
+            "tube_indices": tube_indices,
             "frame_rates": frame_rates,
             "bpms": bpms,
             "labels": labels,
