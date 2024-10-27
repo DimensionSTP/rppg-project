@@ -220,7 +220,7 @@ class CombinedLabelDistributionLoss(nn.Module):
                 dim=-1,
             ),
             target=bpm_distribution,
-            reduction="sum",
+            reduction="batchmean",
             log_target=False,
         )
 
