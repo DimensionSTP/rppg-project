@@ -24,6 +24,7 @@ class VIPLDataset(Dataset):
         seed: int,
         file_path_column_name: str,
         frame_index_column_name: str,
+        tube_index_column_name: str,
         frame_rate_column_name: str,
         bpm_column_name: str,
         ecg_column_name: str,
@@ -42,6 +43,7 @@ class VIPLDataset(Dataset):
         self.seed = seed
         self.file_path_column_name = file_path_column_name
         self.frame_index_column_name = frame_index_column_name
+        self.tube_index_column_name = tube_index_column_name
         self.frame_rate_column_name = frame_rate_column_name
         self.bpm_column_name = bpm_column_name
         self.ecg_column_name = ecg_column_name
@@ -52,6 +54,7 @@ class VIPLDataset(Dataset):
         metadata = self.get_metadata()
         self.file_paths = metadata["file_paths"]
         self.frame_idices = metadata["frame_idices"]
+        self.tube_indices = metadata["tube_indices"]
         self.frame_rates = metadata["frame_rates"]
         self.bpms = metadata["bpms"]
         self.labels = metadata["labels"]
@@ -72,11 +75,11 @@ class VIPLDataset(Dataset):
             str(self.file_paths[idx]),
             "mp_rgb_full",
         )
-        start_frame = self.frame_idices[idx]
 
         tube_token = self.get_single_tube_token(
-            images_path,
-            start_frame,
+            images_path=images_path,
+            frame_index=self.frame_idices[idx],
+            tube_index=self.tube_indices[idx],
         )
         tube_token = tube_token / 255.0
 
@@ -174,12 +177,14 @@ class VIPLDataset(Dataset):
             raise ValueError(f"Inavalid split: {self.split}")
         file_paths = data[self.file_path_column_name].tolist()
         frame_idices = data[self.frame_index_column_name].tolist()
+        tube_idices = data[self.tube_index_column_name].tolist()
         frame_rates = data[self.frame_rate_column_name].tolist()
         bpms = data[self.bpm_column_name].tolist()
         labels = data[self.ecg_column_name].tolist()
         return {
             "file_paths": file_paths,
             "frame_idices": frame_idices,
+            "tube_idices": tube_idices,
             "frame_rates": frame_rates,
             "bpms": bpms,
             "labels": labels,
@@ -188,7 +193,8 @@ class VIPLDataset(Dataset):
     def get_single_tube_token(
         self,
         images_path: str,
-        start_frame: int,
+        frame_index: int,
+        tube_index: int,
     ) -> np.ndarray:
         tube_token = np.zeros(
             (
@@ -201,7 +207,7 @@ class VIPLDataset(Dataset):
         crop_range = np.random.randint(self.image_size // 8)
 
         for i in range(self.clip_frame_size):
-            frame = start_frame + i
+            frame = frame_index + tube_index + i
             image_name = f"image_{frame:05d}.png"
             image_path = os.path.join(
                 images_path,
