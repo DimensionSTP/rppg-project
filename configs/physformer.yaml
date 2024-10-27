@@ -25,8 +25,10 @@ workers_ratio: 8
 use_all_workers: False
 
 split_ratio: 1e-1
+aug_interval: 30
 file_path_column_name: file_path
 frame_index_column_name: frame_index
+tube_index_column_name: tube_index
 frame_rate_column_name: frame_rate
 bpm_column_name: BPM
 ecg_column_name: ECG
