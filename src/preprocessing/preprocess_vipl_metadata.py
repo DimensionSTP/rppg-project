@@ -53,6 +53,28 @@ def preprocess_vipl_metadata(
 
     df[config.frame_index_column_name] = df[config.frame_index_column_name] - 1
 
+    only_path_df = df.drop_duplicates(
+        subset=config.file_path_column_name,
+        ignore_index=True,
+    )
+    missing_file_paths = set()
+    for _, row in tqdm(only_path_df.iterrows()):
+        file_path = row[config.file_path_column_name]
+        frame = 0
+        image_name = f"image_{frame:05d}.png"
+        image_path = os.path.join(
+            f"{config.connected_dir}/data/vipl_tube",
+            file_path,
+            "mp_rgb_full",
+            image_name,
+        )
+        if os.path.exists(image_path):
+            pass
+        else:
+            if file_path in missing_file_paths:
+                missing_file_paths.add(file_path)
+    df = df[~df["file_path"].isin(missing_file_paths)]
+
     ecg_length = len(df.iloc[0, -1])
     end_index = ecg_length - config.clip_frame_size
     aug_times = end_index // config.aug_interval
@@ -71,50 +93,6 @@ def preprocess_vipl_metadata(
         df_list,
         ignore_index=True,
     )
-
-    missing_file_paths = set()
-    checked_paths = {}
-
-    for _, row in tqdm(augmented_df.iterrows(), total=len(augmented_df)):
-        file_path = row[config.file_path_column_name]
-        tube_index = row[config.tube_index_column_name]
-        frame_index = row[config.frame_index_column_name]
-
-        checked_key = (
-            file_path,
-            tube_index,
-            frame_index,
-        )
-
-        if file_path in missing_file_paths:
-            continue
-
-        if checked_key in checked_paths:
-            if checked_paths[checked_key] is True:
-                continue
-        else:
-            all_files_exist = True
-            for i in range(config.clip_frame_size):
-                frame_index = row[config.frame_index_column_name]
-                tube_index = row[config.tube_index_column_name]
-                frame = frame_index + tube_index + i
-                image_name = f"image_{frame:05d}.png"
-                image_path = os.path.join(
-                    f"{config.connected_dir}/data/vipl_tube",
-                    file_path,
-                    "mp_rgb_full",
-                    image_name,
-                )
-
-                if not os.path.exists(image_path):
-                    all_files_exist = False
-                    missing_file_paths.add(file_path)
-                    break
-
-            checked_paths[file_path] = all_files_exist
-    augmented_df = augmented_df[
-        ~augmented_df[config.file_path_column_name].isin(missing_file_paths)
-    ]
 
     train_df, test_df = train_test_split(
         augmented_df,
