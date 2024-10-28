@@ -58,7 +58,7 @@ class CombinedLabelDistributionLoss(nn.Module):
         freq_ce_loss = combined_loss["freq_ce_loss"]
         bpm_mae = combined_loss["bpm_mae"]
 
-        total_loss = alpha * rppg_loss + beta * (freq_ce_loss + 8.0 * kl_div_loss)
+        total_loss = alpha * rppg_loss + beta * (freq_ce_loss + kl_div_loss)
 
         return {
             "total_loss": total_loss,
