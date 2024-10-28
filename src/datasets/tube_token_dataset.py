@@ -210,8 +210,8 @@ class VIPLDataset(Dataset):
                 3,
             ),
         )
-        crop_range = np.random.randint(self.image_size // 8)
 
+        before_image = None
         for i in range(self.clip_frame_size):
             frame = frame_index + tube_index + i
             image_name = f"image_{frame:05d}.png"
@@ -220,42 +220,23 @@ class VIPLDataset(Dataset):
                 image_name,
             )
 
-            before_frame = frame - 1
-            before_image_name = f"image_{before_frame:05d}.png"
-            before_image_path = os.path.join(
-                images_path,
-                before_image_name,
-            )
-
-            after_frame = frame + 1
-            after_image_name = f"image_{after_frame:05d}.png"
-            after_image_path = os.path.join(
-                images_path,
-                after_image_name,
-            )
-
             if os.path.exists(image_path):
                 image = cv2.imread(image_path)
-            elif os.path.exists(before_image_path):
-                image = cv2.imread(before_image_path)
-            elif os.path.exists(after_image_path):
-                image = cv2.imread(after_image_path)
+                before_image = image
             else:
-                raise ValueError(
-                    f"There are no images in both successive front and back frames: {image_path}"
-                )
+                image = before_image
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = cv2.resize(
                 image,
                 (
-                    self.image_size + crop_range,
-                    self.image_size + crop_range,
+                    self.image_size,
+                    self.image_size,
                 ),
                 interpolation=cv2.INTER_CUBIC,
             )[
-                (crop_range // 2) : (self.image_size + crop_range // 2),
-                (crop_range // 2) : (self.image_size + crop_range // 2),
+                0 : self.image_size,
+                0 : self.image_size,
                 :,
             ]
             tube_token[
