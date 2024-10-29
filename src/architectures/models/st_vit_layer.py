@@ -880,11 +880,17 @@ class PPEncoderBlock(nn.Module):
         slow_x, fast_x = self.attention(
             slow_x=self.slow_pre_attention_norm(slow_x),
             fast_x=self.fast_pre_attention_norm(fast_x),
-        ) + (slow_x + fast_x)
+        ) + (
+            slow_x,
+            fast_x,
+        )
         slow_x, fast_x = self.feed_forward(
             slow_x=self.slow_pre_feed_forward_norm(slow_x),
             fast_x=self.fast_pre_feed_forward_norm(fast_x),
-        ) + (slow_x + fast_x)
+        ) + (
+            slow_x,
+            fast_x,
+        )
         return (
             self.slow_norm(slow_x),
             self.fast_norm(fast_x),
