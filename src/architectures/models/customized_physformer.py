@@ -143,7 +143,7 @@ class CustomizedPhysFormer(nn.Module):
             padding=0,
             dilation=1,
             groups=1,
-            bias=False,
+            bias=True,
         )
 
         self.physformer_encoder = PhysFormerEncoder(
