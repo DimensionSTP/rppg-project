@@ -1,0 +1,38 @@
+_target_: src.architectures.physformer_architecture.PhysFormerArchitecture
+
+model:
+  _target_: src.architectures.models.customized_physformerpp.CustomizedPhysFormerPP
+  is_pretrained: ${is_pretrained}
+  patch_size: ${patch_size}
+  feature_size: ${feature_size}
+  sharp_gradient: ${sharp_gradient}
+  num_heads: ${num_heads}
+  model_dims: ${model_dims}
+  tcdc_kernel_size: ${tcdc_kernel_size}
+  tcdc_stride: ${tcdc_stride}
+  tcdc_padding: ${tcdc_padding}
+  tcdc_dilation: ${tcdc_dilation}
+  tcdc_groups: ${tcdc_groups}
+  tcdc_bias: ${tcdc_bias}
+  tcdc_theta: ${tcdc_theta}
+  tcdc_eps: ${tcdc_eps}
+  attention_dropout: ${attention_dropout}
+  feed_forward_dims: ${feed_forward_dims}
+  feed_forward_dropout: ${feed_forward_dropout}
+  num_layers: ${num_layers}
+
+frame_rate_column_name: ${frame_rate_column_name}
+bpm_column_name: ${bpm_column_name}
+min_bpm: ${min_bpm}
+max_bpm: ${max_bpm}
+std: ${std}
+first_alpha: ${first_alpha}
+first_beta: ${first_beta}
+alpha_factor: ${alpha_factor}
+beta_factor: ${beta_factor}
+strategy: ${strategy}
+lr: ${lr}
+weight_decay: ${weight_decay}
+warmup_ratio: ${warmup_ratio}
+eta_min_ratio: ${eta_min_ratio}
+interval: step
