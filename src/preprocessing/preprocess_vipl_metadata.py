@@ -71,9 +71,8 @@ def preprocess_vipl_metadata(
         if os.path.exists(image_path):
             pass
         else:
-            if file_path in missing_file_paths:
-                missing_file_paths.add(file_path)
-    df = df[~df["file_path"].isin(missing_file_paths)]
+            missing_file_paths.add(file_path)
+    df = df[~df[config.file_path_column_name].isin(missing_file_paths)]
 
     ecg_length = len(df.iloc[0, -1])
     end_index = ecg_length - config.clip_frame_size
