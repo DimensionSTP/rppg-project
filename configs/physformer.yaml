@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
   - dataset: tube_token_vipl_dataset
-  - architecture: physformer_architecture
+  - architecture: physformerpp_architecture
   - tuner: physformer_tuner
   - logger: wandb
   - hydra: hydra
@@ -63,6 +63,8 @@ first_beta: 1.0
 alpha_factor: 1.0
 beta_factor: 5.0
 
+is_pp: True
+
 lr: 1e-5
 weight_decay: 1e-2
 warmup_ratio: 5e-2
@@ -83,7 +85,7 @@ gradient_clip_val: 1
 gradient_clip_algorithm: norm
 epoch: 30
 
-model_name: PhysFormer
+model_name: PhysFormerPP
 dataset_name: VIPL
 mode: train
 
