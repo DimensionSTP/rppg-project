@@ -255,7 +255,7 @@ class CustomizedPhysFormer(nn.Module):
             "batch_size channels depth height width -> batch_size (depth height width) channels",
         )
 
-        encoded = self.physformer_encoder(encoded)
+        encoded = self.physformer_encoder(x=encoded)
 
         num_patches = encoded.shape[1]
         depth_size = num_patches // self.feature_size**2
