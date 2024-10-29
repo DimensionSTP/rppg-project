@@ -399,9 +399,9 @@ class MultiHeadTCDCCrossSGAttention(nn.Module):
 
     def forward(
         self,
-        x: Dict[str, torch.Tensor],
-    ) -> Dict[str, torch.Tensor]:
-        slow_x, fast_x = x["slow_x"], x["fast_x"]
+        slow_x: torch.Tensor,
+        fast_x: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         slow_qkv = self.get_qkv(
             x=slow_x,
             speed="slow",
@@ -438,10 +438,10 @@ class MultiHeadTCDCCrossSGAttention(nn.Module):
         )
         slow_output = self.slow_out_projection(slow_attention)
         fast_output = self.fast_out_projection(fast_attention + cross_attention)
-        return {
-            "slow_x": slow_output,
-            "fast_x": fast_output,
-        }
+        return (
+            slow_output,
+            fast_output,
+        )
 
     def get_qkv(
         self,
@@ -656,9 +656,9 @@ class SpatioTemporalCrossFeedForward(nn.Module):
 
     def forward(
         self,
-        x: Dict[str, torch.Tensor],
-    ) -> Dict[str, torch.Tensor]:
-        slow_x, fast_x = x["slow_x"], x["fast_x"]
+        slow_x: torch.Tensor,
+        fast_x: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         slow_output = self.get_forwarded(
             x=slow_x,
             speed="slow",
@@ -667,10 +667,10 @@ class SpatioTemporalCrossFeedForward(nn.Module):
             x=fast_x,
             speed="fast",
         )
-        return {
-            "slow_x": slow_output,
-            "fast_x": fast_output,
-        }
+        return (
+            slow_output,
+            fast_output,
+        )
 
     def get_ff_net(
         self,
