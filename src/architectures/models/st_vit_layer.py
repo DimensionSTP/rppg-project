@@ -877,20 +877,19 @@ class PPEncoderBlock(nn.Module):
         slow_x: torch.Tensor,
         fast_x: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        slow_x, fast_x = self.attention(
+        attn_slow_x, attn_fast_x = self.attention(
             slow_x=self.slow_pre_attention_norm(slow_x),
             fast_x=self.fast_pre_attention_norm(fast_x),
-        ) + (
-            slow_x,
-            fast_x,
         )
-        slow_x, fast_x = self.feed_forward(
+        slow_x = slow_x + attn_slow_x
+        fast_x = fast_x + attn_fast_x
+
+        ff_slow_x, ff_fast_x = self.feed_forward(
             slow_x=self.slow_pre_feed_forward_norm(slow_x),
             fast_x=self.fast_pre_feed_forward_norm(fast_x),
-        ) + (
-            slow_x,
-            fast_x,
         )
+        slow_x = slow_x + ff_slow_x
+        fast_x = fast_x + ff_fast_x
         return (
             self.slow_norm(slow_x),
             self.fast_norm(fast_x),
