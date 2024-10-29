@@ -55,8 +55,8 @@ feed_forward_dims: 144
 feed_forward_dropout: 0.1
 num_layers: 12
 
-min_bpm: 42
-max_bpm: 180
+min_bpm: 45
+max_bpm: 160
 std: 1.0
 first_alpha: 0.1
 first_beta: 1.0
