@@ -948,3 +948,69 @@ class PhysFormerEncoder(nn.Module):
         num_layers: int,
     ) -> ModuleList:
         return ModuleList([copy.deepcopy(layer) for _ in range(num_layers)])
+
+
+class PhysFormerPPEncoder(nn.Module):
+    def __init__(
+        self,
+        feature_size: int,
+        sharp_gradient: float,
+        num_heads: int,
+        model_dims: int,
+        tcdc_kernel_size: int,
+        tcdc_stride: int,
+        tcdc_padding: int,
+        tcdc_dilation: int,
+        tcdc_groups: int,
+        tcdc_bias: bool,
+        tcdc_theta: float,
+        tcdc_eps: float,
+        attention_dropout: float,
+        feed_forward_dims: int,
+        feed_forward_dropout: float,
+        num_layers: int,
+    ) -> None:
+        super().__init__()
+        layer = PPEncoderBlock(
+            feature_size=feature_size,
+            sharp_gradient=sharp_gradient,
+            num_heads=num_heads,
+            model_dims=model_dims,
+            tcdc_kernel_size=tcdc_kernel_size,
+            tcdc_stride=tcdc_stride,
+            tcdc_padding=tcdc_padding,
+            tcdc_dilation=tcdc_dilation,
+            tcdc_groups=tcdc_groups,
+            tcdc_bias=tcdc_bias,
+            tcdc_theta=tcdc_theta,
+            tcdc_eps=tcdc_eps,
+            attention_dropout=attention_dropout,
+            feed_forward_dims=feed_forward_dims,
+            feed_forward_dropout=feed_forward_dropout,
+        )
+        self.layers = self.get_clone(
+            layer=layer,
+            num_layers=num_layers,
+        )
+
+    def forward(
+        self,
+        slow_x: torch.Tensor,
+        fast_x: torch.Tensor,
+    ) -> Dict[str, torch.Tensor]:
+        for layer in self.layers:
+            slow_x, fast_x = layer(
+                slow_x=slow_x,
+                fast_x=fast_x,
+            )
+        return {
+            "slow_x": slow_x,
+            "fast_x": fast_x,
+        }
+
+    @staticmethod
+    def get_clone(
+        layer: nn.Module,
+        num_layers: int,
+    ) -> ModuleList:
+        return ModuleList([copy.deepcopy(layer) for _ in range(num_layers)])
