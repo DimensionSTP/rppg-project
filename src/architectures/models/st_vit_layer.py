@@ -822,6 +822,75 @@ class EncoderBlock(nn.Module):
         return self.norm(x)
 
 
+class PPEncoderBlock(nn.Module):
+    def __init__(
+        self,
+        feature_size: int,
+        sharp_gradient: float,
+        num_heads: int,
+        model_dims: int,
+        tcdc_kernel_size: int,
+        tcdc_stride: int,
+        tcdc_padding: int,
+        tcdc_dilation: int,
+        tcdc_groups: int,
+        tcdc_bias: bool,
+        tcdc_theta: float,
+        tcdc_eps: float,
+        attention_dropout: float,
+        feed_forward_dims: int,
+        feed_forward_dropout: float,
+    ) -> None:
+        super().__init__()
+        self.slow_pre_attention_norm = nn.LayerNorm(model_dims)
+        self.fast_pre_attention_norm = nn.LayerNorm(model_dims // 2)
+        self.attention = MultiHeadTCDCCrossSGAttention(
+            feature_size=feature_size,
+            sharp_gradient=sharp_gradient,
+            num_heads=num_heads,
+            model_dims=model_dims,
+            tcdc_kernel_size=tcdc_kernel_size,
+            tcdc_stride=tcdc_stride,
+            tcdc_padding=tcdc_padding,
+            tcdc_dilation=tcdc_dilation,
+            tcdc_groups=tcdc_groups,
+            tcdc_bias=tcdc_bias,
+            tcdc_theta=tcdc_theta,
+            tcdc_eps=tcdc_eps,
+            attention_dropout=attention_dropout,
+        )
+
+        self.slow_pre_feed_forward_norm = nn.LayerNorm(model_dims)
+        self.fast_pre_feed_forward_norm = nn.LayerNorm(model_dims // 2)
+        self.feed_forward = SpatioTemporalCrossFeedForward(
+            feature_size=feature_size,
+            model_dims=model_dims,
+            feed_forward_dims=feed_forward_dims,
+            feed_forward_dropout=feed_forward_dropout,
+        )
+
+        self.slow_norm = nn.LayerNorm(model_dims)
+        self.fast_norm = nn.LayerNorm(model_dims // 2)
+
+    def forward(
+        self,
+        slow_x: torch.Tensor,
+        fast_x: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        slow_x, fast_x = self.attention(
+            slow_x=self.slow_pre_attention_norm(slow_x),
+            fast_x=self.fast_pre_attention_norm(fast_x),
+        ) + (slow_x + fast_x)
+        slow_x, fast_x = self.feed_forward(
+            slow_x=self.slow_pre_feed_forward_norm(slow_x),
+            fast_x=self.fast_pre_feed_forward_norm(fast_x),
+        ) + (slow_x + fast_x)
+        return (
+            self.slow_norm(slow_x),
+            self.fast_norm(fast_x),
+        )
+
+
 class PhysFormerEncoder(nn.Module):
     def __init__(
         self,
