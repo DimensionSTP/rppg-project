@@ -245,7 +245,7 @@ class CustomizedPhysFormerPP(nn.Module):
                 groups=1,
                 bias=True,
             ),
-            nn.BatchNorm3d(model_dims),
+            nn.BatchNorm3d(model_dims // 2),
             nn.ELU(inplace=True),
         )
 
@@ -362,7 +362,7 @@ class CustomizedPhysFormerPP(nn.Module):
                 groups=1,
                 bias=True,
             ),
-            nn.BatchNorm3d(model_dims),
+            nn.BatchNorm3d(model_dims * 3 // 4),
         )
         self.upsample1 = nn.Sequential(
             nn.Conv3d(
