@@ -62,6 +62,7 @@ hparams:
     log: False
 
 module_params:
+  is_pp: ${is_pp}
   is_pretrained: ${is_pretrained}
   patch_size: ${patch_size}
   feature_size: ${feature_size}
