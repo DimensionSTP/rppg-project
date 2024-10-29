@@ -12,6 +12,7 @@ import optuna
 from optuna.samplers import TPESampler
 from optuna.pruners import HyperbandPruner
 
+from ..architectures.models.customized_physformerpp import CustomizedPhysFormerPP
 from ..architectures.models.customized_physformer import CustomizedPhysFormer
 from ..architectures.physformer_architecture import PhysFormerArchitecture
 
@@ -177,26 +178,48 @@ class PhysFormerTuner:
                 log=self.hparams.eta_min_ratio.log,
             )
 
-        model = CustomizedPhysFormer(
-            is_pretrained=self.module_params.is_pretrained,
-            patch_size=self.module_params.patch_size,
-            feature_size=self.module_params.feature_size,
-            sharp_gradient=params["sharp_gradient"],
-            num_heads=params["num_heads"],
-            model_dims=self.module_params.model_dims,
-            tcdc_kernel_size=self.module_params.tcdc_kernel_size,
-            tcdc_stride=self.module_params.tcdc_stride,
-            tcdc_padding=self.module_params.tcdc_padding,
-            tcdc_dilation=self.module_params.tcdc_dilation,
-            tcdc_groups=self.module_params.tcdc_groups,
-            tcdc_bias=self.module_params.tcdc_bias,
-            tcdc_theta=params["tcdc_theta"],
-            tcdc_eps=self.module_params.tcdc_eps,
-            attention_dropout=params["attention_dropout"],
-            feed_forward_dims=self.module_params.feed_forward_dims,
-            feed_forward_dropout=params["feed_forward_dropout"],
-            num_layers=params["num_layers"],
-        )
+        if self.module_params.is_pp:
+            model = CustomizedPhysFormerPP(
+                is_pretrained=self.module_params.is_pretrained,
+                patch_size=self.module_params.patch_size,
+                feature_size=self.module_params.feature_size,
+                sharp_gradient=params["sharp_gradient"],
+                num_heads=params["num_heads"],
+                model_dims=self.module_params.model_dims,
+                tcdc_kernel_size=self.module_params.tcdc_kernel_size,
+                tcdc_stride=self.module_params.tcdc_stride,
+                tcdc_padding=self.module_params.tcdc_padding,
+                tcdc_dilation=self.module_params.tcdc_dilation,
+                tcdc_groups=self.module_params.tcdc_groups,
+                tcdc_bias=self.module_params.tcdc_bias,
+                tcdc_theta=params["tcdc_theta"],
+                tcdc_eps=self.module_params.tcdc_eps,
+                attention_dropout=params["attention_dropout"],
+                feed_forward_dims=self.module_params.feed_forward_dims,
+                feed_forward_dropout=params["feed_forward_dropout"],
+                num_layers=params["num_layers"],
+            )
+        else:
+            model = CustomizedPhysFormer(
+                is_pretrained=self.module_params.is_pretrained,
+                patch_size=self.module_params.patch_size,
+                feature_size=self.module_params.feature_size,
+                sharp_gradient=params["sharp_gradient"],
+                num_heads=params["num_heads"],
+                model_dims=self.module_params.model_dims,
+                tcdc_kernel_size=self.module_params.tcdc_kernel_size,
+                tcdc_stride=self.module_params.tcdc_stride,
+                tcdc_padding=self.module_params.tcdc_padding,
+                tcdc_dilation=self.module_params.tcdc_dilation,
+                tcdc_groups=self.module_params.tcdc_groups,
+                tcdc_bias=self.module_params.tcdc_bias,
+                tcdc_theta=params["tcdc_theta"],
+                tcdc_eps=self.module_params.tcdc_eps,
+                attention_dropout=params["attention_dropout"],
+                feed_forward_dims=self.module_params.feed_forward_dims,
+                feed_forward_dropout=params["feed_forward_dropout"],
+                num_layers=params["num_layers"],
+            )
         architecture = PhysFormerArchitecture(
             model=model,
             frame_rate_column_name=self.module_params.frame_rate_column_name,
