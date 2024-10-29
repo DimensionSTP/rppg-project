@@ -470,7 +470,7 @@ class MultiHeadTCDCCrossSGAttention(nn.Module):
                 self.fast_value_projection(x),
             )
         else:
-            raise ValueError("Invalid speed. Choose 'fast' or 'slow'.")
+            raise ValueError("Invalid speed. Choose 'slow' or 'fast'.")
         query, key, value = (
             rearrange(
                 i,
@@ -683,7 +683,7 @@ class SpatioTemporalCrossFeedForward(nn.Module):
             model_dims = self.fast_model_dims
             feed_forward_dims = self.fast_feed_forward_dims
         else:
-            raise ValueError("Invalid speed. Choose 'fast' or 'slow'.")
+            raise ValueError("Invalid speed. Choose 'slow' or 'fast'.")
 
         feed_forward1 = nn.Sequential(
             nn.Conv3d(
@@ -757,7 +757,7 @@ class SpatioTemporalCrossFeedForward(nn.Module):
         elif speed == "fast":
             forwarded = self.fast_feed_forward(x)
         else:
-            raise ValueError("Invalid speed. Choose 'fast' or 'slow'.")
+            raise ValueError("Invalid speed. Choose 'slow' or 'fast'.")
 
         forwarded = rearrange(
             forwarded,
