@@ -8,10 +8,10 @@ hparams:
     - 4
     - 8
   num_layers:
-    - 4
-    - 8
+    - 6
+    - 9
     - 12
-    - 16
+    - 15
   tcdc_theta:
     low: 0.5
     high: 0.8
