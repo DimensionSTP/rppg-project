@@ -510,7 +510,7 @@ class MultiHeadTCDCCrossSGAttention(nn.Module):
     ) -> torch.Tensor:
         attention_score = (
             torch.einsum(
-                "B H P D, B H K D -> B H P K",
+                "B I P D, B J K D -> B I P K",
                 query,
                 key,
             )
@@ -522,7 +522,7 @@ class MultiHeadTCDCCrossSGAttention(nn.Module):
         )
 
         attention = torch.einsum(
-            "B H P K, B H K D -> B H P D",
+            "B I P K, B J K D -> B I P D",
             attention_score,
             value,
         )
