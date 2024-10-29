@@ -997,16 +997,16 @@ class PhysFormerPPEncoder(nn.Module):
         self,
         slow_x: torch.Tensor,
         fast_x: torch.Tensor,
-    ) -> Dict[str, torch.Tensor]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         for layer in self.layers:
             slow_x, fast_x = layer(
                 slow_x=slow_x,
                 fast_x=fast_x,
             )
-        return {
-            "slow_x": slow_x,
-            "fast_x": fast_x,
-        }
+        return (
+            slow_x,
+            fast_x,
+        )
 
     @staticmethod
     def get_clone(
