@@ -500,12 +500,12 @@ class CustomizedPhysFormerPP(nn.Module):
 
         fast_encoded = self.prepare_lateral_connection(fast_encoded)
 
-        lateral_connection = rearrange(
-            [
+        lateral_connection = torch.cat(
+            (
                 slow_encoded,
                 fast_encoded,
-            ],
-            "two batch_size channels depth height width -> batch_size (two channels) depth height width",
+            ),
+            dim=1,
         )
         lateral_connection = self.make_lateral_connection(lateral_connection)
         lateral_connection = rearrange(
@@ -542,11 +542,11 @@ class CustomizedPhysFormerPP(nn.Module):
         slow_encoded = self.slow_pre_fusion(slow_encoded)
         fast_encoded = self.fast_pre_fusion(fast_encoded)
 
-        encoded = rearrange(
-            [
+        encoded = torch.cat(
+            (
                 slow_encoded,
                 fast_encoded,
-            ],
-            "two batch_size channels depth height width -> batch_size (two channels) depth height width",
+            ),
+            dim=1,
         )
         return encoded
