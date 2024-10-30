@@ -8,18 +8,13 @@ from lightning.pytorch import LightningModule
 
 from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
 
-from .losses.combined_label_distribution_loss import CombinedLabelDistributionLoss
-
 
 class PhysFormerArchitecture(LightningModule):
     def __init__(
         self,
         model: nn.Module,
+        criterion: nn.Module,
         frame_rate_column_name: str,
-        bpm_column_name: str,
-        min_bpm: int,
-        max_bpm: int,
-        std: float,
         first_alpha: float,
         first_beta: float,
         alpha_factor: float,
@@ -33,16 +28,12 @@ class PhysFormerArchitecture(LightningModule):
     ) -> None:
         super().__init__()
         self.model = model
+        self.criterion = criterion
         self.frame_rate_column_name = frame_rate_column_name
-        self.bpm_column_name = bpm_column_name
-        self.min_bpm = min_bpm
-        self.max_bpm = max_bpm
-        self.std = std
         self.first_alpha = first_alpha
         self.first_beta = first_beta
         self.alpha_factor = alpha_factor
         self.beta_factor = beta_factor
-        self.criterion = CombinedLabelDistributionLoss()
         self.strategy = strategy
         self.lr = lr
         self.weight_decay = weight_decay
@@ -63,7 +54,6 @@ class PhysFormerArchitecture(LightningModule):
     ) -> Dict[str, torch.Tensor]:
         encoded = batch["encoded"]
         frame_rate = batch[self.frame_rate_column_name]
-        bpm = batch[self.bpm_column_name]
         label = batch["label"]
         index = batch["index"]
 
@@ -85,10 +75,6 @@ class PhysFormerArchitecture(LightningModule):
         losses = self.criterion(
             pred=pred,
             target=label,
-            bpm=bpm,
-            min_bpm=self.min_bpm,
-            max_bpm=self.max_bpm,
-            std=self.std,
             frame_rate=frame_rate,
             alpha=alpha,
             beta=beta,
