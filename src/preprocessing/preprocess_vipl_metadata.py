@@ -32,7 +32,7 @@ def preprocess_vipl_metadata(
         config.frame_index_column_name,
         config.frame_rate_column_name,
         config.bpm_column_name,
-        "std",
+        config.std_column_name,
     ] + [f"col_{i}" for i in range(5, df.shape[1])]
 
     df[config.ecg_column_name] = df.apply(
@@ -46,7 +46,7 @@ def preprocess_vipl_metadata(
             config.frame_index_column_name,
             config.frame_rate_column_name,
             config.bpm_column_name,
-            "std",
+            config.std_column_name,
             config.ecg_column_name,
         ]
     ]
