@@ -24,10 +24,6 @@ hparams:
     low: 0.1
     high: 0.5
     log: False
-  std:
-    low: 1.0
-    high: 2.0
-    log: False
   first_alpha:
     low: 0.1
     high: 1.0
@@ -76,7 +72,6 @@ module_params:
   tcdc_eps: ${tcdc_eps}
   feed_forward_dims: ${feed_forward_dims}
   frame_rate_column_name: ${frame_rate_column_name}
-  bpm_column_name: ${bpm_column_name}
   min_bpm: ${min_bpm}
   max_bpm: ${max_bpm}
   interval: step
