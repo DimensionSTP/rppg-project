@@ -9,7 +9,6 @@ file_path_column_name: ${file_path_column_name}
 frame_index_column_name: ${frame_index_column_name}
 tube_index_column_name: ${tube_index_column_name}
 frame_rate_column_name: ${frame_rate_column_name}
-bpm_column_name: ${bpm_column_name}
 ecg_column_name: ${ecg_column_name}
 num_devices: ${devices}
 batch_size: ${batch_size}
