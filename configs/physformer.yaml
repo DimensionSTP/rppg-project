@@ -30,7 +30,6 @@ file_path_column_name: file_path
 frame_index_column_name: frame_index
 tube_index_column_name: tube_index
 frame_rate_column_name: frame_rate
-bpm_column_name: BPM
 ecg_column_name: ECG
 clip_frame_size: 160
 image_size: 128
@@ -57,18 +56,19 @@ num_layers: 12
 
 min_bpm: 45
 max_bpm: 160
-std: 1.0
 first_alpha: 0.1
 first_beta: 1.0
 alpha_factor: 1.0
 beta_factor: 5.0
 
-is_pp: True
-
 lr: 1e-5
 weight_decay: 1e-2
 warmup_ratio: 5e-2
 eta_min_ratio: 1e-2
+
+bpm_column_name: BPM
+std_column_name: std
+is_pp: True
 
 monitor: val_visual_loss
 tracking_direction: min
