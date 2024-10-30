@@ -21,11 +21,12 @@ model:
   feed_forward_dropout: ${feed_forward_dropout}
   num_layers: ${num_layers}
 
+criterion:
+  _target_: src.architectures.losses.combined_label_distribution_loss.CombinedLabelDistributionLoss
+  min_bpm: ${min_bpm}
+  max_bpm: ${max_bpm}
+
 frame_rate_column_name: ${frame_rate_column_name}
-bpm_column_name: ${bpm_column_name}
-min_bpm: ${min_bpm}
-max_bpm: ${max_bpm}
-std: ${std}
 first_alpha: ${first_alpha}
 first_beta: ${first_beta}
 alpha_factor: ${alpha_factor}
