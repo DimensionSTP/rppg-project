@@ -27,7 +27,6 @@ class VIPLDataset(Dataset):
         frame_index_column_name: str,
         tube_index_column_name: str,
         frame_rate_column_name: str,
-        bpm_column_name: str,
         ecg_column_name: str,
         num_devices: int,
         batch_size: int,
@@ -47,7 +46,6 @@ class VIPLDataset(Dataset):
         self.frame_index_column_name = frame_index_column_name
         self.tube_index_column_name = tube_index_column_name
         self.frame_rate_column_name = frame_rate_column_name
-        self.bpm_column_name = bpm_column_name
         self.ecg_column_name = ecg_column_name
         self.num_devices = num_devices
         self.batch_size = batch_size
@@ -58,14 +56,13 @@ class VIPLDataset(Dataset):
         self.frame_indices = metadata["frame_indices"]
         self.tube_indices = metadata["tube_indices"]
         self.frame_rates = metadata["frame_rates"]
-        self.bpms = metadata["bpms"]
         self.labels = metadata["labels"]
         self.clip_frame_size = clip_frame_size
         self.image_size = image_size
         self.transform = self.get_transform()
 
     def __len__(self) -> int:
-        return len(self.bpms)
+        return len(self.file_paths)
 
     def __getitem__(
         self,
@@ -118,10 +115,6 @@ class VIPLDataset(Dataset):
             self.frame_rates[idx],
             dtype=torch.float32,
         )
-        bpm = torch.tensor(
-            self.bpms[idx],
-            dtype=torch.float32,
-        )
         ecg_label = torch.tensor(
             self.labels[idx][: self.clip_frame_size],
             dtype=torch.float32,
@@ -129,7 +122,6 @@ class VIPLDataset(Dataset):
         return {
             "encoded": transformed_tube_token,
             self.frame_rate_column_name: frame_rate,
-            self.bpm_column_name: bpm,
             "label": ecg_label,
             "index": idx,
         }
@@ -185,14 +177,12 @@ class VIPLDataset(Dataset):
         frame_indices = data[self.frame_index_column_name].tolist()
         tube_indices = data[self.tube_index_column_name].tolist()
         frame_rates = data[self.frame_rate_column_name].tolist()
-        bpms = data[self.bpm_column_name].tolist()
         labels = data[self.ecg_column_name].tolist()
         return {
             "file_paths": file_paths,
             "frame_indices": frame_indices,
             "tube_indices": tube_indices,
             "frame_rates": frame_rates,
-            "bpms": bpms,
             "labels": labels,
         }
 
