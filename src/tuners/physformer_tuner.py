@@ -14,6 +14,9 @@ from optuna.pruners import HyperbandPruner
 
 from ..architectures.models.customized_physformerpp import CustomizedPhysFormerPP
 from ..architectures.models.customized_physformer import CustomizedPhysFormer
+from ..architectures.losses.combined_label_distribution_loss import (
+    CombinedLabelDistributionLoss,
+)
 from ..architectures.physformer_architecture import PhysFormerArchitecture
 
 
@@ -114,13 +117,6 @@ class PhysFormerTuner:
                 high=self.hparams.feed_forward_dropout.high,
                 log=self.hparams.feed_forward_dropout.log,
             )
-        if self.hparams.std:
-            params["std"] = trial.suggest_float(
-                name="std",
-                low=self.hparams.std.low,
-                high=self.hparams.std.high,
-                log=self.hparams.std.log,
-            )
         if self.hparams.first_alpha:
             params["first_alpha"] = trial.suggest_float(
                 name="first_alpha",
@@ -220,13 +216,14 @@ class PhysFormerTuner:
                 feed_forward_dropout=params["feed_forward_dropout"],
                 num_layers=params["num_layers"],
             )
-        architecture = PhysFormerArchitecture(
-            model=model,
-            frame_rate_column_name=self.module_params.frame_rate_column_name,
-            bpm_column_name=self.module_params.bpm_column_name,
+        criterion = CombinedLabelDistributionLoss(
             min_bpm=self.module_params.min_bpm,
             max_bpm=self.module_params.max_bpm,
-            std=params["std"],
+        )
+        architecture = PhysFormerArchitecture(
+            model=model,
+            criterion=criterion,
+            frame_rate_column_name=self.module_params.frame_rate_column_name,
             first_alpha=params["first_alpha"],
             first_beta=params["first_beta"],
             alpha_factor=params["alpha_factor"],
