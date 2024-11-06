@@ -42,6 +42,12 @@ class TemporalCenterDifferenceConvolution(nn.Module):
         self,
         x: torch.Tensor,
     ) -> torch.Tensor:
+        """
+        O: out_channels
+        I: in_channels_per_group
+        H: height_kernel_size
+        W: width_kernel_size
+        """
         out_normal = self.conv(x)
 
         if math.fabs(self.tcdc_theta - 0.0) < self.tcdc_eps:
@@ -50,25 +56,13 @@ class TemporalCenterDifferenceConvolution(nn.Module):
             depth = self.conv.weight.shape[2]
             if depth > 1:
                 kernel_0 = reduce(
-                    self.conv.weight[
-                        :,
-                        :,
-                        0,
-                        :,
-                        :,
-                    ],
-                    "out_channels in_channels_per_group height_kernel_size width_kernel_size -> out_channels in_channels_per_group",
+                    self.conv.weight[:, :, 0, :, :],
+                    "O I H W -> O I",
                     "sum",
                 )
                 kernel_2 = reduce(
-                    self.conv.weight[
-                        :,
-                        :,
-                        -1,
-                        :,
-                        :,
-                    ],
-                    "out_channels in_channels_per_group height_kernel_size width_kernel_size -> out_channels in_channels_per_group",
+                    self.conv.weight[:, :, -1, :, :],
+                    "O I H W -> O I",
                     "sum",
                 )
 
