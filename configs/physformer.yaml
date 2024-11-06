@@ -96,8 +96,8 @@ tuned_hparams_path: ${hparams_save_path}/best_params.json
 
 project_name: ${model_name}-${dataset_name}-${mode}
 total_batch_size: bs=${batch_size}x${devices}x${accumulate_grad_batches}
-length_info: data_max_length=${data_max_length}-target_max_length=${target_max_length}
-save_detail: model_dims=${model_dims}-num_heads=${num_heads}-num_layers=${num_layers}-precision=${precision}-${total_batch_size}
+model_info: patch_size=${patch_size}-feature_size=${feature_size}-sharp_gradient=${sharp_gradient}-num_heads=${num_heads}-model_dims=${model_dims}-feed_forward_dims=${feed_forward_dims}-num_layers=${num_layers}
+save_detail: ${model_info}-aug_interval=${aug_interval}-min_bpm=${min_bpm}-max_bpm=${max_bpm}-precision=${precision}-${total_batch_size}
 resumed_step: 0
 ckpt_path: ${callbacks.model_checkpoint.dirpath}/step=${step}.ckpt
 
