@@ -7,20 +7,25 @@ dotenv.load_dotenv(
 import os
 
 import pandas as pd
-from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 import hydra
 from omegaconf import DictConfig
 
 
 @hydra.main(
-    config_path="../../configs/",
-    config_name="physformer.yaml",
+    config_path="../../../configs/",
+    config_name="physca.yaml",
 )
-def preprocess_vipl_metadata(
+def augment_vipl_metadata(
     config: DictConfig,
 ) -> None:
+    if config.data_type != "vipl":
+        raise ValueError(
+            f"Invalid data type: {config.data_type}. Only you can choose 'vipl'."
+        )
+
     df = pd.read_csv(
         f"{config.connected_dir}/metadata/vipl/fold1_train.txt",
         sep="\s+",
@@ -58,12 +63,12 @@ def preprocess_vipl_metadata(
         ignore_index=True,
     )
     missing_file_paths = set()
-    for _, row in tqdm(only_path_df.iterrows()):
+    for _, row in tqdm(only_path_df.iterrows(), total=len(only_path_df)):
         file_path = row[config.file_path_column_name]
         frame = 0
         image_name = f"image_{frame:05d}.png"
         image_path = os.path.join(
-            f"{config.connected_dir}/data/vipl_tube",
+            f"{config.connected_dir}/data/vipl_image",
             file_path,
             "mp_rgb_full",
             image_name,
@@ -98,14 +103,19 @@ def preprocess_vipl_metadata(
         test_size=config.split_ratio,
         random_state=config.seed,
     )
+    train_df = train_df.reset_index(drop=True)
+    test_df = test_df.reset_index(drop=True)
 
+    augmented_df.to_pickle(
+        f"{config.connected_dir}/metadata/{config.data_type}/aug_interval={config.aug_interval}_all.pkl"
+    )
     train_df.to_pickle(
-        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_train.pkl"
+        f"{config.connected_dir}/metadata/{config.data_type}/aug_interval={config.aug_interval}_train.pkl"
     )
     test_df.to_pickle(
-        f"{config.connected_dir}/metadata/vipl/aug_interval={config.aug_interval}_test.pkl"
+        f"{config.connected_dir}/metadata/{config.data_type}/aug_interval={config.aug_interval}_test.pkl"
     )
 
 
 if __name__ == "__main__":
-    preprocess_vipl_metadata()
+    augment_vipl_metadata()
