@@ -99,13 +99,13 @@ total_batch_size: bs=${batch_size}x${devices}x${accumulate_grad_batches}
 model_info: patch_size=${patch_size}-feature_size=${feature_size}-sharp_gradient=${sharp_gradient}-num_heads=${num_heads}-model_dims=${model_dims}-feed_forward_dims=${feed_forward_dims}-num_layers=${num_layers}
 save_detail: ${model_info}-aug_interval=${aug_interval}-min_bpm=${min_bpm}-max_bpm=${max_bpm}-precision=${precision}-${total_batch_size}
 resumed_step: 0
-ckpt_path: ${callbacks.model_checkpoint.dirpath}/step=${step}.ckpt
+ckpt_path: ${callbacks.model_checkpoint.dirpath}/epoch=${epoch}.ckpt
 
 submission_file_name: test
-per_device_save_path: ${connected_dir}/sharded_results/${save_detail}-step=${step}
-logit_name: ${save_detail}-step=${step}
-pred_name: ${save_detail}-step=${step}
-submission_name: ${save_detail}-step=${step}
+per_device_save_path: ${connected_dir}/sharded_results/${save_detail}-epoch=${epoch}
+logit_name: ${save_detail}-epoch=${epoch}
+pred_name: ${save_detail}-epoch=${epoch}
+submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
 upload_tag: VIPL-HR-V1
