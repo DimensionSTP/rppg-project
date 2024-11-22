@@ -300,7 +300,7 @@ def predict(
     )
     sorted_logits_with_indices = all_logits[all_logits[:, -1].argsort()]
     pred_df = pd.read_csv(
-        f"{config.connected_dir}/data/{config.submission_file_name}.csv"
+        f"{config.connected_dir}/metadata/{config.submission_file_name}.csv"
     )
     sorted_logits = sorted_logits_with_indices[: len(pred_df), :-1].numpy()
     all_predictions = sorted_logits
