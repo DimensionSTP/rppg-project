@@ -108,7 +108,7 @@ pred_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
-model_detail: PhysFormer
+model_detail: PhysFormer-customized
 upload_tag: vipl
 
 run_name: ${project_name}

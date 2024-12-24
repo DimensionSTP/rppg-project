@@ -70,7 +70,7 @@ logit_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
-model_detail: RhythmNet
+model_detail: RhythmNet-customized
 upload_tag: custom
 
 run_name: ${project_name}-${mode}
