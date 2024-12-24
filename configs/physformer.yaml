@@ -86,7 +86,7 @@ gradient_clip_algorithm: norm
 epoch: 30
 
 model_name: PhysFormerPP
-dataset_name: VIPL
+dataset_name: vipl
 mode: train
 
 is_tuned: untuned
@@ -108,9 +108,8 @@ pred_name: ${save_detail}-epoch=${epoch}
 submission_name: ${save_detail}-epoch=${epoch}
 
 user_name: ${oc.env:USER_NAME}
-upload_tag: VIPL-HR-V1
 model_detail: PhysFormer
-num_safetensors: 10
+upload_tag: vipl
 
 run_name: ${project_name}
 work_dir: ${hydra:runtime.cwd}
