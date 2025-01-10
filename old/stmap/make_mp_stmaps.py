@@ -166,10 +166,14 @@ def preprocess_video_to_st_maps(
         processed_frames.append(frame_yuv)
         stacked_coordinates.append(coordinate)
 
-        if not os.path.exists(f"{video_path[:-10]}/mp_rgb_full/"):
-            os.makedirs(f"{video_path[:-10]}/mp_rgb_full/")
-        if not os.path.exists(f"{video_path[:-10]}/mp_yuv_full/"):
-            os.makedirs(f"{video_path[:-10]}/mp_yuv_full/")
+        os.makedirs(
+            f"{video_path[:-10]}/mp_rgb_full/",
+            exist_ok=True,
+        )
+        os.makedirs(
+            f"{video_path[:-10]}/mp_yuv_full/",
+            exist_ok=True,
+        )
 
         cv2.imwrite(
             f"{video_path[:-10]}/mp_rgb_full/image_{idx:05d}.png", frame_cropped

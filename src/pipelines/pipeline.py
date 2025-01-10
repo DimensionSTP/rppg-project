@@ -304,21 +304,19 @@ def predict(
     )
     sorted_logits = sorted_logits_with_indices[: len(pred_df), :-1].numpy()
     all_predictions = sorted_logits
-    if not os.path.exists(f"{config.connected_dir}/logits"):
-        os.makedirs(
-            f"{config.connected_dir}/logits",
-            exist_ok=True,
-        )
+    os.makedirs(
+        f"{config.connected_dir}/logits",
+        exist_ok=True,
+    )
     np.save(
         f"{config.connected_dir}/logits/{config.logit_name}.npy",
         sorted_logits,
     )
     pred_df[config.target_column_name] = all_predictions
-    if not os.path.exists(f"{config.connected_dir}/submissions"):
-        os.makedirs(
-            f"{config.connected_dir}/submissions",
-            exist_ok=True,
-        )
+    os.makedirs(
+        f"{config.connected_dir}/submissions",
+        exist_ok=True,
+    )
     pred_df.to_csv(
         f"{config.connected_dir}/submissions/{config.submission_name}.csv",
         index=False,
